@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('offering_skill');
             $table->string('looking_skill');
             $table->text('description');
-            $table->enum('status', ['available', 'in_progress', 'completed', 'cancelled']);
+            $table->string('status');
             $table->timestamps();
         });
     }

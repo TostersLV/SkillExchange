@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('post_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->text('message')->nullable();
-            $table->enum('status', ['pending', 'accepted', 'rejected']);
+            $table->string('status');
             $table->timestamps();
         });
     }
