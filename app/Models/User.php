@@ -44,6 +44,9 @@ class User extends Authenticatable
             : $initials;
     }
 
+    /**
+     * @return HasMany<Post, $this>
+     */
     public function post(): HasMany
     {
         return $this->hasMany(Post::class);
