@@ -1,8 +1,12 @@
 <x-layouts::app :title="$post->offering_skill">
     <div class="mx-auto w-full max-w-2xl p-6 lg:p-8">
-        <flux:button href="{{ route('home') }}" variant="ghost" size="sm" icon="arrow-left" wire:navigate>
-            {{ __('Back to posts') }}
-        </flux:button>
+        <div class="flex items-center justify-between">
+            <flux:button href="{{ route('home') }}" variant="ghost" size="sm" icon="arrow-left">{{ __('Back to posts') }}</flux:button>
+
+            @can('update', $post)
+                <flux:button href="{{ route('posts.edit', $post) }}" variant="ghost" size="sm" icon="pencil-square">{{ __('Edit') }}</flux:button>
+            @endcan
+        </div>
 
         <flux:card class="mt-6 space-y-6">
             <div class="flex items-center justify-between">
@@ -31,9 +35,7 @@
 
             <flux:separator variant="subtle" />
 
-            <flux:text size="sm" class="text-zinc-500">
-                {{ __('Posted by') }} {{ $post->user->username }} &middot; {{ $post->created_at->diffForHumans() }}
-            </flux:text>
+            <flux:text size="sm" class="text-zinc-500">{{ __('Posted by') }} {{ $post->user->username }} &middot; {{ $post->created_at->diffForHumans() }}</flux:text>
         </flux:card>
     </div>
 </x-layouts::app>

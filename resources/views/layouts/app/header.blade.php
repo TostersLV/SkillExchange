@@ -10,26 +10,14 @@
             <x-app-logo href="{{ route('home') }}" wire:navigate />
 
             <flux:navbar class="-mb-px max-lg:hidden">
-                <flux:navbar.item icon="layout-grid" :href="route('home')" :current="request()->routeIs('home')" wire:navigate>
-                    {{ __('Home') }}
-                </flux:navbar.item>
-                <flux:navbar.item icon="plus" :href="route('posts.create')" :current="request()->routeIs('posts.create')" wire:navigate>
-                    {{ __('Create') }}
-                </flux:navbar.item>
+                <flux:navbar.item icon="layout-grid" :href="route('home')" :current="request()->routeIs('home')" wire:navigate>{{ __('Home') }}</flux:navbar.item>
+                <flux:navbar.item icon="plus" :href="route('posts.create')" :current="request()->routeIs('posts.create')" wire:navigate>{{ __('Create') }}</flux:navbar.item>
+                <flux:navbar.item icon="inbox" :href="route('posts.requests')" :current="request()->routeIs('posts.requests')" wire:navigate>{{ __('Requests') }}</flux:navbar.item>
             </flux:navbar>
 
             <flux:spacer />
 
-            <flux:button
-                x-data
-                x-on:click="$flux.dark = ! $flux.dark"
-                icon="moon"
-                variant="subtle"
-                size="sm"
-                square
-                class="mr-1"
-                aria-label="{{ __('Toggle dark mode') }}"
-            />
+            <flux:button x-data x-on:click="$flux.dark = ! $flux.dark" icon="moon" variant="subtle" size="sm" square class="mr-1" aria-label="{{ __('Toggle dark mode') }}" />
 
             <x-desktop-user-menu />
         </flux:header>
@@ -43,12 +31,9 @@
 
             <flux:sidebar.nav>
                 <flux:sidebar.group :heading="__('Platform')">
-                    <flux:sidebar.item icon="layout-grid" :href="route('home')" :current="request()->routeIs('home')" wire:navigate>
-                        {{ __('Home')  }}
-                    </flux:sidebar.item>
-                    <flux:sidebar.item icon="plus" :href="route('posts.create')" :current="request()->routeIs('posts.create')" wire:navigate>
-                        {{ __('Create') }}
-                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="layout-grid" :href="route('home')" :current="request()->routeIs('home')" wire:navigate>{{ __('Home') }}</flux:sidebar.item>
+                    <flux:sidebar.item icon="plus" :href="route('posts.create')" :current="request()->routeIs('posts.create')" wire:navigate>{{ __('Create') }}</flux:sidebar.item>
+                    <flux:sidebar.item icon="inbox" :href="route('posts.requests')" :current="request()->routeIs('posts.requests')" wire:navigate>{{ __('Requests') }}</flux:sidebar.item>
                 </flux:sidebar.group>
             </flux:sidebar.nav>
 
