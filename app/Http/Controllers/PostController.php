@@ -9,7 +9,17 @@ use Illuminate\Http\Request;
 
 class PostController extends Controller
 {
-    public function index() {}
+    public function index(): View
+    {
+        return view('posts.index');
+    }
+
+    public function show(Post $post): View
+    {
+        $post->load(['user', 'category']);
+
+        return view('posts.show', compact('post'));
+    }
 
     public function create(): View
     {
@@ -28,13 +38,12 @@ class PostController extends Controller
         ]);
 
         $post = new Post;
-        $post->user_id = $request->user()->id;  
+        $post->user_id = $request->user()->id;
         $post->category_id = $request->category_id;
         $post->offering_skill = $request->offering_skill;
         $post->looking_skill = $request->looking_skill;
         $post->description = $request->description;
         $post->save();
-
 
         return redirect()->route('home');
 
