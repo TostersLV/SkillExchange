@@ -7,12 +7,13 @@
         <flux:header container class="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
             <flux:sidebar.toggle class="lg:hidden mr-2" icon="bars-2" inset="left" />
 
-            <x-app-logo href="{{ route('home') }}" wire:navigate />
+            <x-app-logo href="{{ route('home') }}" />
 
             <flux:navbar class="-mb-px max-lg:hidden">
-                <flux:navbar.item icon="layout-grid" :href="route('home')" :current="request()->routeIs('home')" wire:navigate>{{ __('Home') }}</flux:navbar.item>
-                <flux:navbar.item icon="plus" :href="route('posts.create')" :current="request()->routeIs('posts.create')" wire:navigate>{{ __('Create') }}</flux:navbar.item>
-                <flux:navbar.item icon="inbox" :href="route('posts.requests')" :current="request()->routeIs('posts.requests')" wire:navigate>{{ __('Requests') }}</flux:navbar.item>
+                <flux:navbar.item icon="layout-grid" :href="route('home')" :current="request()->routeIs('home')">{{ __('Home') }}</flux:navbar.item>
+                <flux:navbar.item icon="plus" :href="route('posts.create')" :current="request()->routeIs('posts.create')">{{ __('Create') }}</flux:navbar.item>
+                <flux:navbar.item icon="inbox" :href="route('posts.requests')" :current="request()->routeIs('posts.requests')">{{ __('Requests') }}</flux:navbar.item>
+                <flux:navbar.item icon="hand-raised" :href="route('posts.offers')" :current="request()->routeIs('posts.offers')">{{ __('Offers') }}</flux:navbar.item>
             </flux:navbar>
 
             <flux:spacer />
@@ -25,15 +26,16 @@
         <!-- Mobile Menu -->
         <flux:sidebar collapsible="mobile" sticky class="lg:hidden border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
             <flux:sidebar.header>
-                <x-app-logo :sidebar="true" href="{{ route('home') }}" wire:navigate />
+                <x-app-logo :sidebar="true" href="{{ route('home') }}" />
                 <flux:sidebar.collapse class="in-data-flux-sidebar-on-desktop:not-in-data-flux-sidebar-collapsed-desktop:-mr-2" />
             </flux:sidebar.header>
 
             <flux:sidebar.nav>
                 <flux:sidebar.group :heading="__('Platform')">
-                    <flux:sidebar.item icon="layout-grid" :href="route('home')" :current="request()->routeIs('home')" wire:navigate>{{ __('Home') }}</flux:sidebar.item>
-                    <flux:sidebar.item icon="plus" :href="route('posts.create')" :current="request()->routeIs('posts.create')" wire:navigate>{{ __('Create') }}</flux:sidebar.item>
-                    <flux:sidebar.item icon="inbox" :href="route('posts.requests')" :current="request()->routeIs('posts.requests')" wire:navigate>{{ __('Requests') }}</flux:sidebar.item>
+                    <flux:sidebar.item icon="layout-grid" :href="route('home')" :current="request()->routeIs('home')">{{ __('Home') }}</flux:sidebar.item>
+                    <flux:sidebar.item icon="plus" :href="route('posts.create')" :current="request()->routeIs('posts.create')">{{ __('Create') }}</flux:sidebar.item>
+                    <flux:sidebar.item icon="inbox" :href="route('posts.requests')" :current="request()->routeIs('posts.requests')">{{ __('Requests') }}</flux:sidebar.item>
+                    <flux:sidebar.item icon="hand-raised" :href="route('posts.offers')" :current="request()->routeIs('posts.offers')">{{ __('Offers') }}</flux:sidebar.item>
                 </flux:sidebar.group>
             </flux:sidebar.nav>
 

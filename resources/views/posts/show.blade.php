@@ -3,9 +3,13 @@
         <div class="flex items-center justify-between">
             <flux:button href="{{ route('home') }}" variant="ghost" size="sm" icon="arrow-left">{{ __('Back to posts') }}</flux:button>
 
-            @can('update', $post)
-                <flux:button href="{{ route('posts.edit', $post) }}" variant="ghost" size="sm" icon="pencil-square">{{ __('Edit') }}</flux:button>
-            @endcan
+            <div class="flex items-center gap-2">
+                @can('update', $post)
+                    <flux:button href="{{ route('posts.edit', $post) }}" variant="ghost" size="sm" icon="pencil-square">{{ __('Edit') }}</flux:button>
+                @endcan
+
+                <livewire:posts.send-offer :post="$post" />
+            </div>
         </div>
 
         <flux:card class="mt-6 space-y-6">
