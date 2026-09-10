@@ -10,15 +10,15 @@
             <x-app-logo href="{{ route('home') }}" />
 
             <flux:navbar class="-mb-px max-lg:hidden">
-                <flux:navbar.item icon="layout-grid" :href="route('home')" :current="request()->routeIs('home')">{{ __('Home') }}</flux:navbar.item>
-                <flux:navbar.item icon="plus" :href="route('posts.create')" :current="request()->routeIs('posts.create')">{{ __('Create') }}</flux:navbar.item>
-                <flux:navbar.item icon="inbox" :href="route('posts.requests')" :current="request()->routeIs('posts.requests')">{{ __('Requests') }}</flux:navbar.item>
-                <flux:navbar.item icon="hand-raised" :href="route('posts.offers')" :current="request()->routeIs('posts.offers')">{{ __('Offers') }}</flux:navbar.item>
+                <flux:navbar.item icon="layout-grid" :href="route('home')" :current="request()->routeIs('home')">Home</flux:navbar.item>
+                <flux:navbar.item icon="plus" :href="route('posts.create')" :current="request()->routeIs('posts.create')">Create</flux:navbar.item>
+                <flux:navbar.item icon="inbox" :href="route('posts.requests')" :current="request()->routeIs('posts.requests')">Requests</flux:navbar.item>
+                <flux:navbar.item icon="hand-raised" :href="route('posts.offers')" :current="request()->routeIs('posts.offers')">Offers</flux:navbar.item>
             </flux:navbar>
 
             <flux:spacer />
 
-            <flux:button x-data x-on:click="$flux.dark = ! $flux.dark" icon="moon" variant="subtle" size="sm" square class="mr-1" aria-label="{{ __('Toggle dark mode') }}" />
+            <flux:button x-data x-on:click="$flux.dark = ! $flux.dark" icon="moon" variant="subtle" size="sm" square class="mr-1" aria-label="Toggle dark mode" />
 
             <x-desktop-user-menu />
         </flux:header>
@@ -31,11 +31,11 @@
             </flux:sidebar.header>
 
             <flux:sidebar.nav>
-                <flux:sidebar.group :heading="__('Platform')">
-                    <flux:sidebar.item icon="layout-grid" :href="route('home')" :current="request()->routeIs('home')">{{ __('Home') }}</flux:sidebar.item>
-                    <flux:sidebar.item icon="plus" :href="route('posts.create')" :current="request()->routeIs('posts.create')">{{ __('Create') }}</flux:sidebar.item>
-                    <flux:sidebar.item icon="inbox" :href="route('posts.requests')" :current="request()->routeIs('posts.requests')">{{ __('Requests') }}</flux:sidebar.item>
-                    <flux:sidebar.item icon="hand-raised" :href="route('posts.offers')" :current="request()->routeIs('posts.offers')">{{ __('Offers') }}</flux:sidebar.item>
+                <flux:sidebar.group heading="Platform">
+                    <flux:sidebar.item icon="layout-grid" :href="route('home')" :current="request()->routeIs('home')">Home</flux:sidebar.item>
+                    <flux:sidebar.item icon="plus" :href="route('posts.create')" :current="request()->routeIs('posts.create')">Create</flux:sidebar.item>
+                    <flux:sidebar.item icon="inbox" :href="route('posts.requests')" :current="request()->routeIs('posts.requests')">Requests</flux:sidebar.item>
+                    <flux:sidebar.item icon="hand-raised" :href="route('posts.offers')" :current="request()->routeIs('posts.offers')">Offers</flux:sidebar.item>
                 </flux:sidebar.group>
             </flux:sidebar.nav>
 

@@ -5,8 +5,7 @@ use App\Models\Post;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     #[Url(as: 'q', except: '')]
     public string $search = '';
 
@@ -24,12 +23,13 @@ new class extends Component
             ->with(['user', 'category'])
             ->when($this->search !== '', function ($query) {
                 $query->where(function ($query) {
-                    $query->where('offering_skill', 'like', '%'.$this->search.'%')
-                        ->orWhere('looking_skill', 'like', '%'.$this->search.'%')
-                        ->orWhere('description', 'like', '%'.$this->search.'%');
+                    $query
+                        ->where('offering_skill', 'like', '%' . $this->search . '%')
+                        ->orWhere('looking_skill', 'like', '%' . $this->search . '%')
+                        ->orWhere('description', 'like', '%' . $this->search . '%');
                 });
             })
-            ->when($this->categoryId !== '', fn ($query) => $query->where('category_id', $this->categoryId))
+            ->when($this->categoryId !== '', fn($query) => $query->where('category_id', $this->categoryId))
             ->latest()
             ->get();
 
@@ -43,17 +43,18 @@ new class extends Component
 
 <div class="space-y-6">
     <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
-        <flux:input wire:model.live.debounce.300ms="search" type="search" icon="magnifying-glass" :label="__('Search')" :placeholder="__('Offering, looking for or description...')" class="sm:flex-1" />
+        <flux:input wire:model.live.debounce.300ms="search" type="search" icon="magnifying-glass" label="Search"
+            placeholder="Offering, looking for or description..." class="sm:flex-1" />
 
-        <flux:select wire:model.live="categoryId" :label="__('Category')" class="sm:w-56">
-            <flux:select.option value="">{{ __('All categories') }}</flux:select.option>
+        <flux:select wire:model.live="categoryId" label="Category" class="sm:w-56">
+            <flux:select.option value="">All categories</flux:select.option>
             @foreach ($categories as $category)
                 <flux:select.option value="{{ $category->id }}">{{ $category->name }}</flux:select.option>
             @endforeach
         </flux:select>
 
         @if ($search !== '' || $categoryId !== '')
-            <flux:button wire:click="clearFilters" variant="ghost" icon="x-mark">{{ __('Clear') }}</flux:button>
+            <flux:button wire:click="clearFilters" variant="ghost" icon="x-mark">Clear</flux:button>
         @endif
     </div>
 

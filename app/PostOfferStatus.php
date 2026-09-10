@@ -8,9 +8,6 @@ enum PostOfferStatus: string
     case ACCEPTED = 'accepted';
     case REJECTED = 'rejected';
 
-    /**
-     * Flux badge colour for this status.
-     */
     public function color(): string
     {
         return match ($this) {
@@ -20,9 +17,6 @@ enum PostOfferStatus: string
         };
     }
 
-    /**
-     * Human-readable label.
-     */
     public function label(): string
     {
         return ucfirst($this->value);

@@ -1,7 +1,7 @@
 @props(['posts', 'filtered' => false])
 
 @if ($posts->isEmpty())
-    <div class="rounded-xl border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">{{ $filtered ? __('No posts match your search.') : __('No posts yet. Be the first to create one.') }}</div>
+    <div class="rounded-xl border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">{{ $filtered ? 'No posts match your search.' : 'No posts yet. Be the first to create one.' }}</div>
 @else
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         @foreach ($posts as $post)
@@ -13,12 +13,12 @@
                     </div>
 
                     <div>
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('Offering') }}</p>
+                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Offering</p>
                         <h3 class="text-lg font-semibold text-zinc-900 dark:text-white">{{ $post->offering_skill }}</h3>
                     </div>
 
                     <div>
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('Looking for') }}</p>
+                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Looking for</p>
                         <h3 class="text-lg font-semibold text-zinc-900 dark:text-white">{{ $post->looking_skill }}</h3>
                     </div>
 
