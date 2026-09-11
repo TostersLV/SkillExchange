@@ -12,13 +12,15 @@
                         <div class="flex items-start justify-between gap-3">
                             <div>
                                 <flux:text size="sm" class="text-zinc-500">
-                                    To {{ $offer->post->user->username }} &middot; {{ $offer->created_at->diffForHumans() }}
+                                    To {{ $offer->post->user->username }} &middot;
+                                    {{ $offer->created_at->diffForHumans() }}
                                 </flux:text>
                                 <a href="{{ route('posts.show', $offer->post) }}" class="underline">
                                     <flux:heading size="lg">{{ $offer->post->offering_skill }}</flux:heading>
                                 </a>
                             </div>
-                            <flux:badge size="sm" :color="$offer->status->color()">{{ $offer->status->label() }}</flux:badge>
+                            <flux:badge size="sm" :color="$offer->status->color()">{{ $offer->status->label() }}
+                            </flux:badge>
                         </div>
 
                         @if ($offer->message)
@@ -30,7 +32,8 @@
                                 <form method="POST" action="{{ route('posts.offers.cancel', $offer) }}">
                                     @csrf
                                     @method('DELETE')
-                                    <flux:button type="submit" variant="ghost" size="sm" icon="x-mark">Cancel offer</flux:button>
+                                    <flux:button type="submit" variant="ghost" size="sm" icon="x-mark">Cancel offer
+                                    </flux:button>
                                 </form>
                             </div>
                         @endcan

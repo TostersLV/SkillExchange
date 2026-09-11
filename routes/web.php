@@ -10,8 +10,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('requests', [PostRequestController::class, 'index'])->name('posts.requests');
     Route::get('offers', [PostOfferController::class, 'index'])->name('posts.offers');
-    Route::delete('offers/{offer}', [PostOfferController::class, 'destroy'])->name('posts.offers.cancel');
+    Route::patch('offers/{offer}/accept', [PostOfferController::class, 'accept'])->name('post.offers.accept');
 
+    Route::delete('offers/{offer}', [PostOfferController::class, 'destroy'])->name('posts.offers.cancel');
+    Route::delete('offers/{offer}/reject', [PostOfferController::class, 'reject'])->name('posts.offers.reject');
+    
     Route::get('posts/create', [PostController::class, 'create'])->name('posts.create');
     Route::post('/create', [PostController::class, 'store'])->name('post.store');
     Route::get('posts/{post}', [PostController::class, 'show'])->name('posts.show');

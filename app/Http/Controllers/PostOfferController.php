@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\PostOffer;
+use App\Policies\PostOfferPolicy;
+use App\PostOfferStatus;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -22,6 +24,23 @@ class PostOfferController extends Controller
         Gate::authorize('cancel', $offer);
 
         $offer->delete();
+
+        return back();
+    }
+    public function reject(PostOffer $offer): RedirectResponse
+    {
+        Gate::authorize('reject', $offer);
+
+        $offer->delete();
+
+        return back();
+    }
+    public function accept(PostOffer $offer): RedirectResponse
+    {
+        Gate::authorize('accept', $offer);
+
+        $offer->status = PostOfferStatus::ACCEPTED;
+        $offer->save();
 
         return back();
     }

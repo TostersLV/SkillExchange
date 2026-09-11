@@ -23,6 +23,22 @@
                             </flux:badge>
 
                         </div>
+                        <div class="flex gap-2">
+                            @can('accept', $offer)
+                                <form method="POST" action="{{ route('post.offers.accept', $offer) }}">
+                                    @csrf
+                                    @method('PATCH')
+                                    <flux:button size="sm">Accept</flux:button>
+                                </form>
+                            @endcan
+                            @can('reject', $offer)
+                                <form method="POST" action="{{ route('posts.offers.reject', $offer) }}">
+                                    @csrf
+                                    @method('DELETE')
+                                    <flux:button type='submit' size="sm" variant="danger">Reject</flux:button>
+                                </form>
+                            @endcan
+                        </div>
 
                         @if ($offer->message)
                             <flux:text class="whitespace-pre-line">{{ $offer->message }}</flux:text>

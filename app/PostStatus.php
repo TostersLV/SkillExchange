@@ -5,7 +5,7 @@ namespace App;
 enum PostStatus: string
 {
     case AVAILABLE = 'available';
-    case IN_PROGRESS = 'in_progress';
+    case IN_PROGRESS = 'In progress';
     case COMPLETED = 'completed';
     case CANCELLED = 'cancelled';
 }

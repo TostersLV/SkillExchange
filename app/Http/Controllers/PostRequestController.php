@@ -14,4 +14,5 @@ class PostRequestController extends Controller
 
         return view('postsrequest.index', compact('offers'));
     }
+    
 }
