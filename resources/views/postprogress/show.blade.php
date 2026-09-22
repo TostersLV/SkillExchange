@@ -47,6 +47,24 @@ $otherUsername = $offer->user_id === auth()->id() ? $offer->post->user->username
                 @if ($offer->post->status === \App\PostStatus::COMPLETED)
                     <flux:callout icon="check-circle" variant="success"
                         heading="You both confirmed. This exchange is complete." />
+
+                    @if ($myReview)
+                        <div class="flex items-center gap-2">
+                            <flux:text size="sm">You rated {{ $otherUsername }}</flux:text>
+                            <x-star-rating :rating="$myReview->review" />
+                        </div>
+                    @else
+                        <form method="POST" action="{{ route('posts.progress.review', $offer) }}" class="space-y-2">
+                            @csrf
+                            @method('PATCH')
+
+                            <flux:text size="sm">Rate {{ $otherUsername }}</flux:text>
+
+                            <x-star-rating-input name="rating" />
+
+                            <flux:button type="submit" variant="primary" class="w-full">Submit review</flux:button>
+                        </form>
+                    @endif
                 @elseif ($offer->hasBeenCompletedBy(auth()->user()))
                     <div class="space-y-2">
                         <flux:text size="sm">Waiting for {{ $otherUsername }} to confirm</flux:text>

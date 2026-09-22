@@ -18,6 +18,7 @@ return new class extends Migration
             $table->foreignId('reviewee_id')->nullable()->constrained('users')->nullOnDelete();
             $table->integer('review');
             $table->timestamps();
+            $table->unique(['post_offer_id', 'reviewer_id']);
         });
     }
 

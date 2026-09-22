@@ -4,16 +4,20 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Post;
+use App\Models\PostOffer;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 
 class PostController extends Controller
 {
     public function index(): View
     {
-        return view('posts.index');
+        $awaitingReview = PostOffer::query()->awaitingReviewBy(Auth::user())->with(['post', 'user'])->latest()->get();
+
+        return view('posts.index', compact('awaitingReview'));
     }
 
     public function show(Post $post): View|RedirectResponse

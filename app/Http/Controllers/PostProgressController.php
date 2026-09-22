@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\PostOffer;
+use App\Models\Review;
+use App\Models\User;
 use App\PostOfferStatus;
 use App\PostStatus;
 use Illuminate\Contracts\View\View;
@@ -16,15 +18,9 @@ class PostProgressController extends Controller
 {
     public function index(): View
     {
-        $matches = PostOffer::query()
-            ->with(['post', 'user'])
-            ->where('status', PostOfferStatus::ACCEPTED)
-            ->where(function ($query) {
-                $query->where('user_id', Auth::id())
-                    ->orWhereRelation('post', 'user_id', Auth::id());
-            })
-            ->latest()
-            ->get();
+        $matches = PostOffer::query()->with(['post', 'user'])->where('status', PostOfferStatus::ACCEPTED)->where(function ($query) {
+                $query->where('user_id', Auth::id())->orWhereRelation('post', 'user_id', Auth::id());
+            })->latest()->get();
 
         return view('postprogress.index', compact('matches'));
     }
@@ -35,7 +31,9 @@ class PostProgressController extends Controller
 
         $offer->load(['post.user', 'user']);
 
-        return view('postprogress.show', compact('offer'));
+        $myReview = $offer->reviews()->where('reviewer_id', Auth::id())->first();
+
+        return view('postprogress.show', compact('offer', 'myReview'));
     }
 
     public function complete(Request $request, PostOffer $offer): RedirectResponse
@@ -54,6 +52,33 @@ class PostProgressController extends Controller
                 $offer->post->save();
             }
         });
+
+        return back();
+    }
+
+    public function review(Request $request, PostOffer $offer): RedirectResponse
+    {
+        $user = $request->user();
+
+        Gate::forUser($user)->authorize('review', $offer);
+
+        $validated = $request->validate([
+            'rating' => ['required', 'integer', 'between:1,5'],
+        ]);
+
+        $revieweeId = $offer->user_id === $user->id ? $offer->post->user_id : $offer->user_id;
+
+        $offer->reviews()->create([
+            'reviewer_id' => $user->id,
+            'reviewee_id' => $revieweeId,
+            'review' => $validated['rating'],
+        ]);
+
+        $average = (float) Review::where('reviewee_id', $revieweeId)->avg('review');
+
+        $reviewee = User::findOrFail($revieweeId);
+        $reviewee->reputation = (string) round($average, 2);
+        $reviewee->save();
 
         return back();
     }

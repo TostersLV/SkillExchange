@@ -3,7 +3,9 @@
 namespace App\Models;
 
 use App\PostOfferStatus;
+use App\PostStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -36,6 +38,22 @@ class PostOffer extends Model
     public function hasBeenCompletedByOther(User $user): bool
     {
         return $this->completeOffers()->where('user_id', '!=', $user->id)->exists();
+    }
+
+    public function hasBeenReviewedBy(User $user): bool
+    {
+        return $this->reviews()->where('reviewer_id', $user->id)->exists();
+    }
+
+    /**
+     * 
+     * 
+     * @param  Builder<PostOffer>  $query
+     * @return Builder<PostOffer>
+     */
+    public function scopeAwaitingReviewBy(Builder $query, User $user): Builder
+    {
+        return $query->where('status', PostOfferStatus::ACCEPTED)->whereRelation('post', 'status', PostStatus::COMPLETED)->where(fn ($query) => $query->where('user_id', $user->id)->orWhereRelation('post', 'user_id', $user->id))->whereDoesntHave('reviews', fn ($query) => $query->where('reviewer_id', $user->id));
     }
 
     /**

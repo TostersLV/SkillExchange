@@ -24,6 +24,14 @@ class PostOfferPolicy
             && ! $offer->hasBeenCompletedBy($user);
     }
 
+    // Either participant can review the other once, after the exchange is complete
+    public function review(User $user, PostOffer $offer): bool
+    {
+        return $this->view($user, $offer)
+            && $offer->post->status === PostStatus::COMPLETED
+            && ! $offer->hasBeenReviewedBy($user);
+    }
+
     // Only the user who sent an offer can cancel the post
     public function cancel(User $user, PostOffer $offer): bool
     {

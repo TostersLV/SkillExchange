@@ -11,6 +11,18 @@
             <flux:callout class="mt-6" icon="information-circle" heading="{{ session('status') }}" />
         @endif
 
+        @if ($awaitingReview->isNotEmpty())
+            <flux:callout class="mt-6" icon="star"
+                heading="{{ $awaitingReview->count() === 1 ? 'You have an exchange to review' : 'You have '.$awaitingReview->count().' exchanges to review' }}">
+                <x-slot name="actions">
+                    <flux:button size="sm"
+                        href="{{ $awaitingReview->count() === 1 ? route('posts.progress.show', $awaitingReview->first()) : route('posts.progress') }}">
+                        Review now
+                    </flux:button>
+                </x-slot>
+            </flux:callout>
+        @endif
+
         <div class="mt-8">
             <livewire:posts.search-and-filter />
         </div>
