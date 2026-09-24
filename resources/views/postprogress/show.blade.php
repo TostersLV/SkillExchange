@@ -2,104 +2,108 @@
 $otherUsername = $offer->user_id === auth()->id() ? $offer->post->user->username : $offer->user->username;
 ?>
 <x-layouts::app :title="$offer->post->offering_skill">
-    <div class="mx-auto w-full max-w-5xl p-6 lg:p-8">
-        <flux:button href="{{ route('posts.progress') }}" variant="ghost" size="sm" icon="arrow-left">Back to In
-            Progress</flux:button>
+    <div class="mx-auto w-full max-w-[1200px] px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+        <x-swap.button href="{{ route('posts.progress') }}" variant="ghost" size="sm" class="-ms-3">
+            <flux:icon.arrow-left variant="micro" />
+            Back to In progress
+        </x-swap.button>
 
-        <div class="mt-6 grid gap-6 lg:grid-cols-[340px_1fr]">
-            <flux:card class="h-fit space-y-6">
-                <div class="flex items-center justify-between">
-                    <flux:badge size="sm" color="zinc">{{ $offer->post->category->name }}</flux:badge>
-                    <flux:badge size="sm"
-                        :color="match ($offer->post->status) {\App\PostStatus::COMPLETED => 'green', \App\PostStatus::IN_PROGRESS => 'amber', default => 'zinc',}">
-                        {{ $offer->post->status->label() }}
-                    </flux:badge>
+        <div class="mt-6 grid gap-6 lg:grid-cols-[380px_1fr]">
+            <x-swap.card class="h-fit space-y-6">
+                <div class="flex items-center justify-between gap-2">
+                    <x-swap.badge>{{ $offer->post->category->name }}</x-swap.badge>
+                    <x-swap.status :status="$offer->post->status" />
                 </div>
 
-                <div class="space-y-4">
-                    <div>
-                        <flux:text size="sm" class="text-zinc-500">Offering</flux:text>
-                        <flux:heading size="lg">{{ $offer->post->offering_skill }}</flux:heading>
+                <div class="space-y-3">
+                    <div class="rounded-lg border border-line bg-raised p-4">
+                        <p class="eyebrow">Offering</p>
+                        <h1 class="mt-1 text-lg leading-snug font-semibold break-words text-strong">
+                            {{ $offer->post->offering_skill }}</h1>
                     </div>
 
-                    <div>
-                        <flux:text size="sm" class="text-zinc-500">Looking for</flux:text>
-                        <flux:heading size="lg">{{ $offer->post->looking_skill }}</flux:heading>
+                    <div class="flex justify-center text-strong">
+                        <span class="flex size-7 items-center justify-center rounded-full border border-line-strong bg-surface">
+                            <x-swap.icon class="size-3.5 rotate-90" />
+                            <span class="sr-only">in exchange for</span>
+                        </span>
+                    </div>
+
+                    <div class="rounded-lg border border-line bg-raised p-4">
+                        <p class="eyebrow">Looking for</p>
+                        <p class="mt-1 text-lg leading-snug font-semibold break-words text-strong">
+                            {{ $offer->post->looking_skill }}</p>
                     </div>
                 </div>
 
                 @if ($offer->post->description)
                     <div>
-                        <flux:text size="sm" class="text-zinc-500">Description</flux:text>
-                        <flux:text class="mt-1 whitespace-pre-line">{{ $offer->post->description }}</flux:text>
+                        <p class="eyebrow">Description</p>
+                        <p class="mt-1.5 text-sm leading-6 whitespace-pre-line text-fg">{{ $offer->post->description }}</p>
                     </div>
                 @endif
 
-                <flux:separator variant="subtle" />
-
-                <flux:text size="sm" class="text-zinc-500">
-                    Posted by {{ $offer->post->user->username }} &middot;
+                <p class="border-t border-line pt-5 text-sm text-muted">
+                    Posted by <span class="font-medium text-fg">{{ $offer->post->user->username }}</span> &middot;
                     {{ $offer->post->created_at->diffForHumans() }}
-                </flux:text>
+                </p>
 
-                <flux:separator variant="subtle" />
+                <div class="border-t border-line pt-5">
+                    @if ($offer->post->status === \App\PostStatus::COMPLETED)
+                        <flux:callout icon="check-circle" variant="success"
+                            heading="You both confirmed. This exchange is complete." />
 
-                @if ($offer->post->status === \App\PostStatus::COMPLETED)
-                    <flux:callout icon="check-circle" variant="success"
-                        heading="You both confirmed. This exchange is complete." />
+                        @if ($myReview)
+                            <div class="mt-4 flex items-center justify-between gap-2">
+                                <p class="text-sm text-muted">You rated {{ $otherUsername }}</p>
+                                <x-star-rating :rating="$myReview->review" />
+                            </div>
+                        @else
+                            <form method="POST" action="{{ route('posts.progress.review', $offer) }}" class="mt-5 space-y-3">
+                                @csrf
+                                @method('PATCH')
 
-                    @if ($myReview)
-                        <div class="flex items-center gap-2">
-                            <flux:text size="sm">You rated {{ $otherUsername }}</flux:text>
-                            <x-star-rating :rating="$myReview->review" />
+                                <div>
+                                    <p class="text-sm font-semibold text-strong">Rate {{ $otherUsername }}</p>
+                                    <p class="mt-0.5 text-sm text-muted">Your rating helps others decide who to trust.</p>
+                                </div>
+
+                                <x-star-rating-input name="rating" />
+
+                                <x-swap.button type="submit" class="w-full">Submit review</x-swap.button>
+                            </form>
+                        @endif
+                    @elseif ($offer->hasBeenCompletedBy(auth()->user()))
+                        <div class="space-y-3">
+                            <p class="flex items-center gap-2 text-sm text-muted">
+                                <flux:icon.clock variant="micro" class="size-4" aria-hidden="true" />
+                                Waiting for {{ $otherUsername }} to confirm
+                            </p>
+
+                            <x-swap.button disabled class="w-full">Mark as complete</x-swap.button>
                         </div>
                     @else
-                        <form method="POST" action="{{ route('posts.progress.review', $offer) }}" class="space-y-2">
+                        <form method="POST" action="{{ route('posts.progress.complete', $offer) }}" class="space-y-3">
                             @csrf
                             @method('PATCH')
 
-                            <flux:text size="sm">Rate {{ $otherUsername }}</flux:text>
+                            @if ($offer->hasBeenCompletedByOther(auth()->user()))
+                                <p class="text-sm text-muted">{{ $otherUsername }} marked this as complete. Confirm to
+                                    close it.</p>
+                            @endif
 
-                            <x-star-rating-input name="rating" />
-
-                            <flux:button type="submit" variant="primary" class="w-full">Submit review</flux:button>
+                            <x-swap.button type="submit" class="w-full">
+                                <flux:icon.check variant="micro" />
+                                Mark as complete
+                            </x-swap.button>
                         </form>
                     @endif
-                @elseif ($offer->hasBeenCompletedBy(auth()->user()))
-                    <div class="space-y-2">
-                        <flux:text size="sm">Waiting for {{ $otherUsername }} to confirm</flux:text>
-
-                        <flux:button disabled class="w-full">Mark as complete</flux:button>
-                    </div>
-                @else
-                    <form method="POST" action="{{ route('posts.progress.complete', $offer) }}" class="space-y-2">
-                        @csrf
-                        @method('PATCH')
-
-                        @if ($offer->hasBeenCompletedByOther(auth()->user()))
-                            <flux:text size="sm">{{ $otherUsername }} marked this as complete. Confirm to close
-                                it.
-                            </flux:text>
-                        @endif
-
-                        <flux:button type="submit" variant="primary" class="w-full">Mark as complete</flux:button>
-                    </form>
-                @endif
-            </flux:card>
-
-            <flux:card class="flex h-[32rem] flex-col">
-                <flux:heading size="lg">Chat with {{ $otherUsername }}</flux:heading>
-
-                <div
-                    class="mt-4 flex-1 overflow-y-auto rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800">
-                    <flux:text size="sm" class="text-zinc-500">No messages yet.</flux:text>
                 </div>
+            </x-swap.card>
 
-                <div class="mt-4 flex items-end gap-2">
-                    <flux:input rows="1" placeholder="Write your message here" disabled class="flex-1" />
-                    <flux:button variant="primary" disabled>Send</flux:button>
-                </div>
-            </flux:card>
+            <x-swap.card class="flex h-[34rem] flex-col">
+                <livewire:posts.progress-chat :offer="$offer" />
+            </x-swap.card>
         </div>
     </div>
 </x-layouts::app>

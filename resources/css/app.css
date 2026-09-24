@@ -8,31 +8,143 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/*
+ * SkillExchange palette: navy, paper, amber (+ white for card surfaces).
+ * Every other color in the UI is a tint, shade or transparency of these.
+ */
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
-    --color-zinc-50: #fafafa;
-    --color-zinc-100: #f5f5f5;
-    --color-zinc-200: #e5e5e5;
-    --color-zinc-300: #d4d4d4;
-    --color-zinc-400: #a3a3a3;
-    --color-zinc-500: #737373;
-    --color-zinc-600: #525252;
-    --color-zinc-700: #404040;
-    --color-zinc-800: #262626;
-    --color-zinc-900: #171717;
-    --color-zinc-950: #0a0a0a;
+    --color-navy: #1b2a4e;
+    --color-paper: #f7f8fa;
+    --color-amber: #e8a33d;
+    --color-error: #b0413e;
 
-    --color-accent: var(--color-neutral-800);
-    --color-accent-content: var(--color-neutral-800);
-    --color-accent-foreground: var(--color-white);
+    /* Semantic roles that flip between light and dark mode. */
+    --color-page: var(--role-page);
+    --color-surface: var(--role-surface);
+    --color-raised: var(--role-raised);
+    --color-strong: var(--role-strong);
+    --color-fg: var(--role-fg);
+    --color-muted: var(--role-muted);
+    --color-line: var(--role-line);
+    --color-line-strong: var(--role-line-strong);
+    --color-brand: var(--role-brand);
+    --color-on-brand: var(--role-on-brand);
+    --color-band: var(--role-band);
+
+    --color-accent: var(--role-brand);
+    --color-accent-content: var(--role-brand);
+    --color-accent-foreground: var(--role-on-brand);
+
+    --animate-fade-in: fade-in 0.3s ease-out both;
 }
 
+:root {
+    --role-page: #f7f8fa;
+    --role-surface: #ffffff;
+    --role-raised: color-mix(in oklab, #1b2a4e 4%, #ffffff);
+    --role-strong: #1b2a4e;
+    --role-fg: color-mix(in oklab, #1b2a4e 85%, transparent);
+    --role-muted: color-mix(in oklab, #1b2a4e 70%, transparent);
+    --role-line: color-mix(in oklab, #1b2a4e 9%, transparent);
+    --role-line-strong: color-mix(in oklab, #1b2a4e 18%, transparent);
+    --role-brand: #1b2a4e;
+    --role-on-brand: #ffffff;
+    --role-band: #1b2a4e;
+}
+
+.dark {
+    /* Graphite: near-neutral charcoal with a faint navy undertone, so dark mode reads as calm, not blue. */
+    --role-page: #0e1117;
+    --role-surface: #161a22;
+    --role-raised: #1d222c;
+    --role-strong: #f7f8fa;
+    --role-fg: color-mix(in oklab, #f7f8fa 86%, transparent);
+    --role-muted: color-mix(in oklab, #f7f8fa 62%, transparent);
+    --role-line: color-mix(in oklab, #f7f8fa 8%, transparent);
+    --role-line-strong: color-mix(in oklab, #f7f8fa 15%, transparent);
+    --role-brand: #f7f8fa;
+    --role-on-brand: #1b2a4e;
+    --role-band: #12161d;
+}
+
+/*
+ * Flux builds its neutrals from the zinc scale; remap it onto navy so menus,
+ * inputs, modals and toasts never show an off-palette gray. Success (green)
+ * becomes navy and errors (red) become a single muted red.
+ */
 @layer theme {
+    :root {
+        --color-zinc-50: color-mix(in oklab, #1b2a4e 3%, #ffffff);
+        --color-zinc-100: color-mix(in oklab, #1b2a4e 6%, #ffffff);
+        --color-zinc-200: color-mix(in oklab, #1b2a4e 14%, #ffffff);
+        --color-zinc-300: color-mix(in oklab, #1b2a4e 24%, #ffffff);
+        --color-zinc-400: color-mix(in oklab, #1b2a4e 45%, #ffffff);
+        --color-zinc-500: color-mix(in oklab, #1b2a4e 72%, #ffffff);
+        --color-zinc-600: color-mix(in oklab, #1b2a4e 80%, #ffffff);
+        --color-zinc-700: color-mix(in oklab, #1b2a4e 92%, #ffffff);
+        --color-zinc-800: #1b2a4e;
+        --color-zinc-900: #1b2a4e;
+        --color-zinc-950: #0f1830;
+
+        --color-green-50: color-mix(in oklab, #1b2a4e 4%, #ffffff);
+        --color-green-100: color-mix(in oklab, #1b2a4e 8%, #ffffff);
+        --color-green-200: color-mix(in oklab, #1b2a4e 18%, #ffffff);
+        --color-green-300: color-mix(in oklab, #1b2a4e 35%, #ffffff);
+        --color-green-400: color-mix(in oklab, #1b2a4e 60%, #ffffff);
+        --color-green-500: #1b2a4e;
+        --color-green-600: #1b2a4e;
+        --color-green-700: #1b2a4e;
+        --color-green-800: #1b2a4e;
+        --color-green-900: #1b2a4e;
+        --color-green-950: #0f1830;
+
+        --color-red-50: color-mix(in oklab, #b0413e 6%, #ffffff);
+        --color-red-100: color-mix(in oklab, #b0413e 12%, #ffffff);
+        --color-red-200: color-mix(in oklab, #b0413e 25%, #ffffff);
+        --color-red-300: color-mix(in oklab, #b0413e 45%, #ffffff);
+        --color-red-400: color-mix(in oklab, #b0413e 75%, #ffffff);
+        --color-red-500: #b0413e;
+        --color-red-600: #b0413e;
+        --color-red-700: #9a3835;
+        --color-red-800: #83302e;
+        --color-red-900: #6b2826;
+        --color-red-950: #4a1b1a;
+    }
+
     .dark {
-        --color-accent: var(--color-white);
-        --color-accent-content: var(--color-white);
-        --color-accent-foreground: var(--color-neutral-800);
+        --color-zinc-50: #f7f8fa;
+        --color-zinc-100: color-mix(in oklab, #f7f8fa 94%, #0e1117);
+        --color-zinc-200: color-mix(in oklab, #f7f8fa 86%, #0e1117);
+        --color-zinc-300: color-mix(in oklab, #f7f8fa 76%, #0e1117);
+        --color-zinc-400: color-mix(in oklab, #f7f8fa 62%, #0e1117);
+        --color-zinc-500: color-mix(in oklab, #f7f8fa 48%, #0e1117);
+        --color-zinc-600: #2a303c;
+        --color-zinc-700: #232833;
+        --color-zinc-800: #161a22;
+        --color-zinc-900: #12161d;
+        --color-zinc-950: #0e1117;
+
+        --color-green-200: #f7f8fa;
+        --color-green-300: #f7f8fa;
+        --color-green-400: #f7f8fa;
+        --color-green-500: #f7f8fa;
+
+        --color-red-300: color-mix(in oklab, #b0413e 45%, #ffffff);
+        --color-red-400: color-mix(in oklab, #b0413e 55%, #ffffff);
+        --color-red-500: color-mix(in oklab, #b0413e 70%, #ffffff);
+    }
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 
@@ -43,24 +155,184 @@
     ::before,
     ::backdrop,
     ::file-selector-button {
-        border-color: var(--color-gray-200, currentColor);
+        border-color: var(--color-line, currentColor);
+    }
+
+    html {
+        -webkit-font-smoothing: antialiased;
+        font-feature-settings: 'cv11', 'ss01';
+    }
+
+    /* Stop the elastic "bounce" past the footer (touchpads / mobile). */
+    html,
+    body {
+        overscroll-behavior-y: none;
+    }
+
+    :focus-visible {
+        outline: 2px solid var(--color-brand);
+        outline-offset: 2px;
+    }
+
+    ::selection {
+        background-color: color-mix(in oklab, #e8a33d 35%, transparent);
     }
 }
+
+@layer components {
+    .eyebrow {
+        font-size: 0.6875rem;
+        line-height: 1rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--color-muted);
+    }
+}
+
+@utility card-shadow {
+    box-shadow: 0 1px 2px color-mix(in oklab, #1b2a4e 5%, transparent), 0 1px 3px color-mix(in oklab, #1b2a4e 4%, transparent);
+
+    &:where(.dark, .dark *) {
+        box-shadow: 0 1px 2px color-mix(in oklab, #000000 30%, transparent);
+    }
+}
+
+@utility card-shadow-hover {
+    box-shadow: 0 2px 4px color-mix(in oklab, #1b2a4e 6%, transparent), 0 12px 24px -8px color-mix(in oklab, #1b2a4e 14%, transparent);
+
+    &:where(.dark, .dark *) {
+        box-shadow: 0 2px 4px color-mix(in oklab, #000000 30%, transparent), 0 12px 24px -8px color-mix(in oklab, #000000 45%, transparent);
+    }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    html {
+        scroll-behavior: smooth;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ---------- Flux re-skin ---------- */
 
 [data-flux-field]:not(ui-radio, ui-checkbox) {
     @apply grid gap-2;
 }
 
 [data-flux-label] {
-    @apply  !mb-0 !leading-tight;
+    @apply !mb-0 !leading-tight font-medium;
+}
+
+input[data-flux-control],
+textarea[data-flux-control],
+select[data-flux-control] {
+    border-width: 1px !important;
+    border-color: var(--color-line-strong) !important;
+    border-radius: 0.5rem !important;
+    background-color: var(--color-surface) !important;
+    color: var(--color-strong) !important;
+    box-shadow: none !important;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+input[data-flux-control]::placeholder,
+textarea[data-flux-control]::placeholder {
+    color: var(--color-muted) !important;
+    opacity: 0.8;
 }
 
 input:focus[data-flux-control],
 textarea:focus[data-flux-control],
 select:focus[data-flux-control] {
-    @apply outline-hidden ring-2 ring-accent ring-offset-2 ring-offset-accent-foreground;
+    @apply outline-hidden;
+    border-color: var(--color-brand) !important;
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-brand) 18%, transparent) !important;
 }
 
-/* \[:where(&)\]:size-4 {
-    @apply size-4;
-} */
+[data-flux-control][data-invalid] {
+    border-color: var(--color-error) !important;
+}
+
+[data-flux-callout] {
+    border-width: 1px !important;
+    border-color: var(--color-line) !important;
+    border-radius: 0.75rem !important;
+    background-color: var(--color-surface) !important;
+}
+
+[data-flux-modal-content],
+[data-flux-menu] {
+    border-width: 1px !important;
+    border-color: var(--color-line) !important;
+    border-radius: 0.75rem !important;
+    background-color: var(--color-surface) !important;
+}
+
+[data-flux-avatar] {
+    background-color: color-mix(in oklab, var(--color-brand) 10%, transparent);
+    color: var(--color-strong) !important;
+    font-weight: 600;
+}
+
+[data-flux-link] {
+    color: var(--color-brand) !important;
+    text-decoration-color: color-mix(in oklab, var(--color-brand) 35%, transparent) !important;
+    font-weight: 500;
+}
+
+/* Navbar: navy-70% links, full navy + thin amber underline when active. */
+[data-flux-header] [data-flux-navbar-items] {
+    color: var(--color-muted) !important;
+    font-weight: 500;
+    transition: color 150ms ease;
+}
+
+[data-flux-header] [data-flux-navbar-items]:hover {
+    color: var(--color-strong) !important;
+    background-color: transparent !important;
+}
+
+[data-flux-header] [data-flux-navbar-items] [data-flux-icon] {
+    color: inherit !important;
+}
+
+[data-flux-header] [data-flux-navbar-items][data-current] {
+    color: var(--color-strong) !important;
+}
+
+[data-flux-navbar-items][data-current]::after {
+    background-color: var(--color-amber) !important;
+    height: 2px !important;
+    border-radius: 999px;
+}
+
+/* Sit the active underline on the header's bottom border (64px header, 32px item). */
+[data-flux-header] [data-flux-navbar-items][data-current]::after {
+    bottom: -16px !important;
+    inset-inline: 0.75rem !important;
+}
+
+/* Mobile menu and settings navigation: quiet navy tint + amber edge for the current item. */
+[data-flux-sidebar-item][data-current],
+[data-flux-navlist-item][data-current] {
+    background-color: color-mix(in oklab, var(--color-brand) 8%, transparent) !important;
+    border-color: transparent !important;
+    color: var(--color-strong) !important;
+    box-shadow: inset 2px 0 0 var(--color-amber);
+}
+
+/* On phones the profile trigger shrinks to just the avatar so the header fits. */
+@media (max-width: 639px) {
+    [data-flux-header] [data-flux-profile] > :not(:has([data-flux-avatar])) {
+        display: none;
+    }
+}

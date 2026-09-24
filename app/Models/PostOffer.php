@@ -46,8 +46,6 @@ class PostOffer extends Model
     }
 
     /**
-     * 
-     * 
      * @param  Builder<PostOffer>  $query
      * @return Builder<PostOffer>
      */
@@ -94,5 +92,15 @@ class PostOffer extends Model
     public function completeOffers(): HasMany
     {
         return $this->hasMany(CompleteOffer::class);
+    }
+
+    /**
+     * The chat messages exchanged between the two participants.
+     *
+     * @return HasMany<Message, $this>
+     */
+    public function messages(): HasMany
+    {
+        return $this->hasMany(Message::class)->oldest();
     }
 }

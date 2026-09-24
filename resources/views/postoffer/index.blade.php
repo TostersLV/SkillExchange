@@ -1,52 +1,60 @@
 <x-layouts::app title="Offers">
-    <div class="mx-auto w-full max-w-3xl p-6 lg:p-8">
-        <flux:heading size="xl" level="1">Offers</flux:heading>
-        <flux:text class="mt-2">Offers people have sent for your posts.</flux:text>
+    <div class="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6 lg:py-14">
+        <x-swap.page-header title="Offers">
+            Offers people have sent for your posts.
+        </x-swap.page-header>
 
         @if ($offers->isEmpty())
-            <flux:callout class="mt-8" icon="inbox" heading="No offers yet." />
+            <x-swap.empty class="mt-8" icon="inbox" title="No offers yet">
+                When someone offers to exchange with one of your posts, it will appear here for you to accept or decline.
+                <x-slot name="actions">
+                    <x-swap.button href="{{ route('posts.create') }}" size="sm">Share a skill</x-swap.button>
+                </x-slot>
+            </x-swap.empty>
         @else
-            <div class="mt-8 space-y-4">
+            <div class="mt-8 space-y-3">
                 @foreach ($offers as $offer)
-                    <flux:card class="space-y-3" wire:key="offer-{{ $offer->id }}">
+                    <x-swap.card class="space-y-4 motion-safe:animate-fade-in" wire:key="offer-{{ $offer->id }}">
                         <div class="flex items-start justify-between gap-3">
-                            <div>
+                            <div class="min-w-0">
                                 <flux:heading size="lg">
-                                    <a href="{{ route('profile.show', $offer->user) }}" class="hover:underline">{{ $offer->user->username }}</a>
-                                </flux:heading>
-                                <flux:text size="sm" class="text-zinc-500">
-                                    for
                                     <a href="{{ route('posts.show', $offer->post) }}"
-                                        class="underline">{{ $offer->post->offering_skill }}</a>
+                                        class="rounded hover:underline">{{ $offer->post->offering_skill }}</a>
+                                </flux:heading>
+                                <flux:text size="sm" class="mt-1">
+                                    from
+                                    <a href="{{ route('profile.show', $offer->user) }}"
+                                        class="font-semibold text-brand underline decoration-brand/40 underline-offset-2 hover:decoration-brand">{{ $offer->user->username }}</a>
                                     &middot; {{ $offer->created_at->diffForHumans() }}
                                 </flux:text>
                             </div>
-                            <flux:badge size="sm" :color="$offer->status->color()">
-                                {{ $offer->status->label() }}
-                            </flux:badge>
-
+                            <x-swap.status :status="$offer->status" />
                         </div>
-                        <div class="flex gap-2">
+
+                        @if ($offer->message)
+                            <blockquote class="rounded-lg border border-line bg-raised px-4 py-3 text-sm leading-6 whitespace-pre-line text-fg">{{ $offer->message }}</blockquote>
+                        @endif
+
+                        <div class="flex flex-wrap gap-2">
                             @can('accept', $offer)
                                 <form method="POST" action="{{ route('post.offers.accept', $offer) }}">
                                     @csrf
                                     @method('PATCH')
-                                    <flux:button type='submit' size="sm">Accept</flux:button>
+                                    <x-swap.button type="submit" size="sm" variant="primary">
+                                        <flux:icon.check variant="micro" />
+                                        Accept
+                                    </x-swap.button>
                                 </form>
                             @endcan
                             @can('reject', $offer)
                                 <form method="POST" action="{{ route('posts.offers.reject', $offer) }}">
                                     @csrf
                                     @method('DELETE')
-                                    <flux:button type='submit' size="sm" variant="danger">Reject</flux:button>
+                                    <x-swap.button type="submit" size="sm" variant="danger">Reject</x-swap.button>
                                 </form>
                             @endcan
                         </div>
-
-                        @if ($offer->message)
-                            <flux:text class="whitespace-pre-line">{{ $offer->message }}</flux:text>
-                        @endif
-                    </flux:card>
+                    </x-swap.card>
                 @endforeach
             </div>
         @endif

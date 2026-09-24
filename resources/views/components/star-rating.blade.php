@@ -1,11 +1,13 @@
-@props(['rating', 'max' => 5])
+@props(['rating', 'max' => 5, 'showScore' => true])
 
-<div {{ $attributes->merge(['class' => 'flex items-center gap-0.5']) }}>
-    @for ($i = 1; $i <= $max; $i++)
-        @if ($i <= round($rating))
-            <flux:icon.star variant="solid" class="size-4 text-amber-400" />
-        @else
-            <flux:icon.star variant="outline" class="size-4 text-zinc-300 dark:text-zinc-600" />
-        @endif
-    @endfor
+<div {{ $attributes->merge(['class' => 'flex items-center gap-1.5']) }}>
+    <div class="flex items-center gap-0.5" role="img" aria-label="Rated {{ number_format($rating, 1) }} out of {{ $max }}">
+        @for ($i = 1; $i <= $max; $i++)
+            <flux:icon.star variant="micro" class="size-4 {{ $i <= round($rating) ? 'text-amber' : 'text-brand/15' }}" />
+        @endfor
+    </div>
+
+    @if ($showScore)
+        <span class="text-sm font-semibold text-strong tabular-nums" aria-hidden="true">{{ number_format($rating, 1) }}</span>
+    @endif
 </div>

@@ -41,22 +41,33 @@ new class extends Component {
 };
 ?>
 
-<div class="space-y-6">
+<div class="space-y-5">
     <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
-        <flux:input wire:model.live.debounce.300ms="search" type="search" icon="magnifying-glass" label="Search"
-            placeholder="Offering, looking for or description..." class="sm:flex-1" />
-
-        <flux:select wire:model.live="categoryId" label="Category" class="sm:w-56">
-            <flux:select.option value="">All categories</flux:select.option>
-            @foreach ($categories as $category)
-                <flux:select.option value="{{ $category->id }}">{{ $category->name }}</flux:select.option>
-            @endforeach
-        </flux:select>
+        <div class="sm:flex-1">
+            <x-swap.input wire:model.live.debounce.300ms="search" type="search" icon="magnifying-glass" label="Search"
+                placeholder="Offering, looking for or description..." />
+        </div>
 
         @if ($search !== '' || $categoryId !== '')
-            <flux:button wire:click="clearFilters" variant="ghost" icon="x-mark">Clear</flux:button>
+            <x-swap.button wire:click="clearFilters" variant="ghost" class="sm:mb-px">
+                <flux:icon.x-mark variant="micro" />
+                Clear
+            </x-swap.button>
         @endif
     </div>
 
-    <x-posts.results :posts="$posts" :filtered="$search !== '' || $categoryId !== ''" />
+    <div class="flex flex-wrap gap-2" role="group" aria-label="Filter by category">
+        <x-swap.chip wire:click="$set('categoryId', '')" :active="$categoryId === ''">All</x-swap.chip>
+
+        @foreach ($categories as $category)
+            <x-swap.chip wire:click="$set('categoryId', '{{ $category->id }}')"
+                :active="(string) $categoryId === (string) $category->id">
+                {{ $category->name }}
+            </x-swap.chip>
+        @endforeach
+    </div>
+
+    <div class="pt-4">
+        <x-posts.results :posts="$posts" :filtered="$search !== '' || $categoryId !== ''" />
+    </div>
 </div>

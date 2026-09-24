@@ -54,11 +54,14 @@ new class extends Component {
 <div>
     @if ($this->isOwner())
     @elseif ($this->hasOffered())
-        <flux:badge size="sm" color="green" icon="check">Offer sent</flux:badge>
+        <x-swap.badge icon="check-circle">Offer sent</x-swap.badge>
     @elseif (! $this->isAvailable())
-        <flux:badge size="sm" color="zinc">No longer available</flux:badge>
+        <x-swap.badge icon="lock-closed">No longer available</x-swap.badge>
     @else
-        <flux:button size="sm" icon="hand-raised" wire:click="$set('showModal', true)">Send offer</flux:button>
+        <x-swap.button size="sm" wire:click="$set('showModal', true)">
+            <x-swap.icon class="size-4" />
+            Send offer
+        </x-swap.button>
 
         <flux:modal wire:model.self="showModal" class="md:w-96">
             <form wire:submit="sendOffer" class="space-y-4">
@@ -70,9 +73,9 @@ new class extends Component {
 
                 <div class="flex justify-end gap-2">
                     <flux:modal.close>
-                        <flux:button variant="ghost">Cancel</flux:button>
+                        <x-swap.button variant="ghost">Cancel</x-swap.button>
                     </flux:modal.close>
-                    <flux:button type="submit" variant="primary">Send offer</flux:button>
+                    <x-swap.button type="submit" variant="primary">Send offer</x-swap.button>
                 </div>
             </form>
         </flux:modal>
