@@ -18,7 +18,7 @@
     <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         @foreach ($posts as $post)
             @php($isAvailable = $post->status === \App\PostStatus::AVAILABLE)
-            <a href="{{ route('posts.show', $post) }}" wire:key="post-{{ $post->id }}"
+            <a href="{{ route('posts.show', $post) }}" wire:navigate wire:key="post-{{ $post->id }}"
                 @unless ($isAvailable) aria-disabled="true" tabindex="-1" @endunless
                 class="group block rounded-xl motion-safe:animate-fade-in focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand {{ $isAvailable ? '' : 'pointer-events-none opacity-80' }}"
                 style="animation-delay: {{ min($loop->index, 8) * 40 }}ms">

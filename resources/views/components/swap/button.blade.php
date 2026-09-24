@@ -23,7 +23,12 @@
 @endphp
 
 @if ($attributes->has('href'))
-    <a {{ $attributes->merge(['class' => $classes]) }}>{{ $slot }}</a>
+    @php
+        // Internal page links use Livewire's SPA navigation (no full reload, no style flash); in-page anchors don't.
+        $href = (string) $attributes->get('href');
+        $isInternalPage = ! str_contains($href, '#') && (str_starts_with($href, '/') || str_starts_with($href, url('/')));
+    @endphp
+    <a {{ $attributes->merge(['class' => $classes]) }} @if ($isInternalPage && ! $attributes->has('wire:navigate')) wire:navigate @endif>{{ $slot }}</a>
 @else
     <button type="{{ $type }}" {{ $attributes->merge(['class' => $classes]) }}>{{ $slot }}</button>
 @endif

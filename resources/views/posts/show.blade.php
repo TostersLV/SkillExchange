@@ -63,7 +63,7 @@
                 </div>
             @endif
 
-            <a href="{{ route('profile.show', $post->user) }}"
+            <a href="{{ route('profile.show', $post->user) }}" wire:navigate
                 class="group mt-8 flex items-center justify-between gap-3 rounded-b-xl border-t border-line px-6 py-5 transition-colors duration-150 hover:bg-raised sm:px-8">
                 <div class="flex items-center gap-3">
                     <flux:avatar size="sm" :name="$post->user->username" :initials="$post->user->initials()" />

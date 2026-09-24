@@ -16,11 +16,11 @@
 
             {{-- Absolutely centered in the header so it stays in the middle regardless of the logo/user-menu widths. --}}
             <flux:navbar class="absolute inset-y-0 left-1/2 flex -translate-x-1/2 items-center gap-1 !py-0 max-lg:hidden">
-                <flux:navbar.item :href="route('home')" :current="request()->routeIs('home')">Home</flux:navbar.item>
-                <flux:navbar.item :href="route('posts.create')" :current="request()->routeIs('posts.create')">Create</flux:navbar.item>
-                <flux:navbar.item :href="route('posts.requests')" :current="request()->routeIs('posts.requests')">Requests</flux:navbar.item>
-                <flux:navbar.item :href="route('posts.offers')" :current="request()->routeIs('posts.offers')">Offers</flux:navbar.item>
-                <flux:navbar.item :href="route('posts.progress')" :current="request()->routeIs('posts.progress')">In Progress</flux:navbar.item>
+                <flux:navbar.item :href="route('home')" :current="request()->routeIs('home')" wire:navigate>Home</flux:navbar.item>
+                <flux:navbar.item :href="route('posts.create')" :current="request()->routeIs('posts.create')" wire:navigate>Create</flux:navbar.item>
+                <flux:navbar.item :href="route('posts.requests')" :current="request()->routeIs('posts.requests')" wire:navigate>Requests</flux:navbar.item>
+                <flux:navbar.item :href="route('posts.offers')" :current="request()->routeIs('posts.offers')" wire:navigate>Offers</flux:navbar.item>
+                <flux:navbar.item :href="route('posts.progress')" :current="request()->routeIs('posts.progress')" wire:navigate>In Progress</flux:navbar.item>
             </flux:navbar>
 
             <flux:spacer />
@@ -43,11 +43,11 @@
 
             <flux:sidebar.nav>
                 <flux:sidebar.group heading="Menu">
-                    <flux:sidebar.item icon="layout-grid" :href="route('home')" :current="request()->routeIs('home')">Home</flux:sidebar.item>
-                    <flux:sidebar.item icon="plus" :href="route('posts.create')" :current="request()->routeIs('posts.create')">Create</flux:sidebar.item>
-                    <flux:sidebar.item icon="inbox" :href="route('posts.requests')" :current="request()->routeIs('posts.requests')">Requests</flux:sidebar.item>
-                    <flux:sidebar.item icon="hand-raised" :href="route('posts.offers')" :current="request()->routeIs('posts.offers')">Offers</flux:sidebar.item>
-                    <flux:sidebar.item icon="arrow-path" :href="route('posts.progress')" :current="request()->routeIs('posts.progress')">In Progress</flux:sidebar.item>
+                    <flux:sidebar.item icon="layout-grid" :href="route('home')" :current="request()->routeIs('home')" wire:navigate>Home</flux:sidebar.item>
+                    <flux:sidebar.item icon="plus" :href="route('posts.create')" :current="request()->routeIs('posts.create')" wire:navigate>Create</flux:sidebar.item>
+                    <flux:sidebar.item icon="inbox" :href="route('posts.requests')" :current="request()->routeIs('posts.requests')" wire:navigate>Requests</flux:sidebar.item>
+                    <flux:sidebar.item icon="hand-raised" :href="route('posts.offers')" :current="request()->routeIs('posts.offers')" wire:navigate>Offers</flux:sidebar.item>
+                    <flux:sidebar.item icon="arrow-path" :href="route('posts.progress')" :current="request()->routeIs('posts.progress')" wire:navigate>In Progress</flux:sidebar.item>
                 </flux:sidebar.group>
             </flux:sidebar.nav>
 

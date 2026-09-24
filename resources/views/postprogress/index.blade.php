@@ -16,7 +16,7 @@
                 @foreach ($matches as $match)
                     @php($isSender = $match->user_id === auth()->id())
                     @php($otherUsername = $isSender ? $match->post->user->username : $match->user->username)
-                    <a href="{{ route('posts.progress.show', $match) }}" wire:key="match-{{ $match->id }}"
+                    <a href="{{ route('posts.progress.show', $match) }}" wire:navigate wire:key="match-{{ $match->id }}"
                         class="group block rounded-xl motion-safe:animate-fade-in focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand">
                         <x-swap.card interactive class="flex flex-col gap-4 sm:flex-row sm:items-center">
                             <span

@@ -18,12 +18,12 @@
                         <div class="flex items-start justify-between gap-3">
                             <div class="min-w-0">
                                 <flux:heading size="lg">
-                                    <a href="{{ route('posts.show', $offer->post) }}"
+                                    <a href="{{ route('posts.show', $offer->post) }}" wire:navigate
                                         class="rounded hover:underline">{{ $offer->post->offering_skill }}</a>
                                 </flux:heading>
                                 <flux:text size="sm" class="mt-1">
                                     from
-                                    <a href="{{ route('profile.show', $offer->user) }}"
+                                    <a href="{{ route('profile.show', $offer->user) }}" wire:navigate
                                         class="font-semibold text-brand underline decoration-brand/40 underline-offset-2 hover:decoration-brand">{{ $offer->user->username }}</a>
                                     &middot; {{ $offer->created_at->diffForHumans() }}
                                 </flux:text>

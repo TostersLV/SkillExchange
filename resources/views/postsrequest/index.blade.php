@@ -17,11 +17,11 @@
                     <x-swap.card class="space-y-4 motion-safe:animate-fade-in" wire:key="offer-{{ $offer->id }}">
                         <div class="flex items-start justify-between gap-3">
                             <div class="min-w-0">
-                                <a href="{{ route('posts.show', $offer->post) }}" class="inline-block rounded hover:underline">
+                                <a href="{{ route('posts.show', $offer->post) }}" wire:navigate class="inline-block rounded hover:underline">
                                     <flux:heading size="lg">{{ $offer->post->offering_skill }}</flux:heading>
                                 </a>
                                 <flux:text size="sm" class="mt-1">
-                                    To <a href="{{ route('profile.show', $offer->post->user) }}"
+                                    To <a href="{{ route('profile.show', $offer->post->user) }}" wire:navigate
                                         class="font-semibold text-brand underline decoration-brand/40 underline-offset-2 hover:decoration-brand">{{ $offer->post->user->username }}</a>
                                     &middot;
                                     {{ $offer->created_at->diffForHumans() }}
