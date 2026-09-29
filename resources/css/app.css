@@ -336,3 +336,12 @@ select:focus[data-flux-control] {
         display: none;
     }
 }
+
+/* Chat composer: the textarea sits borderless inside the rounded composer box. */
+.chat-composer textarea[data-flux-control] {
+    border: 0 !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    min-height: 2.25rem;
+    padding-block: 0.4rem !important;
+}

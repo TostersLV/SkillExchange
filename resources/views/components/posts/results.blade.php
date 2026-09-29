@@ -47,23 +47,26 @@
                             <p class="eyebrow">Looking for</p>
                             <p class="mt-1 text-lg leading-snug font-semibold break-words text-strong">{{ $post->looking_skill }}</p>
                         </div>
-
-                        @if ($post->description)
-                            <p class="line-clamp-2 pt-1 text-sm leading-6 text-muted">{{ $post->description }}</p>
-                        @endif
                     </div>
 
-                    <div class="flex items-center justify-between gap-3 border-t border-line px-5 py-4">
-                        <div class="flex min-w-0 items-center gap-2.5">
-                            <flux:avatar size="xs" :name="$post->user->username" :initials="$post->user->initials()" />
-                            <span class="truncate text-sm font-medium text-strong">{{ $post->user->username }}</span>
+                    <div class="border-t border-line px-5 py-4">
+                        <div class="mb-2 flex items-center justify-between gap-3">
+                            <p class="eyebrow">Author</p>
+                            <p class="eyebrow">Reputation</p>
                         </div>
 
-                        @if ($post->user->reputation !== null)
-                            <x-star-rating :rating="$post->user->reputation" />
-                        @else
-                            <span class="text-xs text-muted">No reviews yet</span>
-                        @endif
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="flex min-w-0 items-center gap-2.5">
+                                <flux:avatar size="xs" :name="$post->user->username" :initials="$post->user->initials()" />
+                                <span class="truncate text-sm font-medium text-strong">{{ $post->user->username }}</span>
+                            </div>
+
+                            @if ($post->user->reputation !== null)
+                                <x-star-rating :rating="$post->user->reputation" />
+                            @else
+                                <span class="text-xs text-muted">No reviews yet</span>
+                            @endif
+                        </div>
                     </div>
                 </x-swap.card>
             </a>

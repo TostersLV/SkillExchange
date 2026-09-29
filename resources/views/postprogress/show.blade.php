@@ -1,5 +1,6 @@
 <?php
-$otherUsername = $offer->user_id === auth()->id() ? $offer->post->user->username : $offer->user->username;
+$otherUser = $offer->user_id === auth()->id() ? $offer->post->user : $offer->user;
+$otherUsername = $otherUser->username;
 ?>
 <x-layouts::app :title="$offer->post->offering_skill">
     <div class="mx-auto w-full max-w-[1200px] px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
@@ -36,15 +37,8 @@ $otherUsername = $offer->user_id === auth()->id() ? $offer->post->user->username
                     </div>
                 </div>
 
-                @if ($offer->post->description)
-                    <div>
-                        <p class="eyebrow">Description</p>
-                        <p class="mt-1.5 text-sm leading-6 whitespace-pre-line text-fg">{{ $offer->post->description }}</p>
-                    </div>
-                @endif
-
                 <p class="border-t border-line pt-5 text-sm text-muted">
-                    Posted by <span class="font-medium text-fg">{{ $offer->post->user->username }}</span> &middot;
+                    Posted by <a href="{{ route('profile.show', $offer->post->user) }}" wire:navigate class="font-medium text-strong underline decoration-line-strong underline-offset-2 transition-colors hover:decoration-brand">{{ $offer->post->user->username }}</a> &middot;
                     {{ $offer->post->created_at->diffForHumans() }}
                 </p>
 
@@ -55,7 +49,7 @@ $otherUsername = $offer->user_id === auth()->id() ? $offer->post->user->username
 
                         @if ($myReview)
                             <div class="mt-4 flex items-center justify-between gap-2">
-                                <p class="text-sm text-muted">You rated {{ $otherUsername }}</p>
+                                <p class="text-sm text-muted">You rated <a href="{{ route('profile.show', $otherUser) }}" wire:navigate class="font-medium text-strong underline decoration-line-strong underline-offset-2 transition-colors hover:decoration-brand">{{ $otherUsername }}</a></p>
                                 <x-star-rating :rating="$myReview->review" />
                             </div>
                         @else
@@ -64,7 +58,7 @@ $otherUsername = $offer->user_id === auth()->id() ? $offer->post->user->username
                                 @method('PATCH')
 
                                 <div>
-                                    <p class="text-sm font-semibold text-strong">Rate {{ $otherUsername }}</p>
+                                    <p class="text-sm font-semibold text-strong">Rate <a href="{{ route('profile.show', $otherUser) }}" wire:navigate class="font-medium text-strong underline decoration-line-strong underline-offset-2 transition-colors hover:decoration-brand">{{ $otherUsername }}</a></p>
                                     <p class="mt-0.5 text-sm text-muted">Your rating helps others decide who to trust.</p>
                                 </div>
 
@@ -77,7 +71,7 @@ $otherUsername = $offer->user_id === auth()->id() ? $offer->post->user->username
                         <div class="space-y-3">
                             <p class="flex items-center gap-2 text-sm text-muted">
                                 <flux:icon.clock variant="micro" class="size-4" aria-hidden="true" />
-                                Waiting for {{ $otherUsername }} to confirm
+                                Waiting for <a href="{{ route('profile.show', $otherUser) }}" wire:navigate class="font-medium text-strong underline decoration-line-strong underline-offset-2 transition-colors hover:decoration-brand">{{ $otherUsername }}</a> to confirm
                             </p>
 
                             <x-swap.button disabled class="w-full">Mark as complete</x-swap.button>
@@ -88,7 +82,7 @@ $otherUsername = $offer->user_id === auth()->id() ? $offer->post->user->username
                             @method('PATCH')
 
                             @if ($offer->hasBeenCompletedByOther(auth()->user()))
-                                <p class="text-sm text-muted">{{ $otherUsername }} marked this as complete. Confirm to
+                                <p class="text-sm text-muted"><a href="{{ route('profile.show', $otherUser) }}" wire:navigate class="font-medium text-strong underline decoration-line-strong underline-offset-2 transition-colors hover:decoration-brand">{{ $otherUsername }}</a> marked this as complete. Confirm to
                                     close it.</p>
                             @endif
 
@@ -101,7 +95,7 @@ $otherUsername = $offer->user_id === auth()->id() ? $offer->post->user->username
                 </div>
             </x-swap.card>
 
-            <x-swap.card class="flex h-[34rem] flex-col">
+            <x-swap.card padding="none" class="flex h-[36rem] flex-col overflow-hidden">
                 <livewire:posts.progress-chat :offer="$offer" />
             </x-swap.card>
         </div>

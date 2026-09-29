@@ -13,6 +13,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->encryptCookies(except: ['appearance']);
+
+        // First-time visitors opening the site root see the landing page; other protected pages still go to login.
+        $middleware->redirectGuestsTo(fn (Request $request) => $request->routeIs('home') ? route('welcome') : route('login'));
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

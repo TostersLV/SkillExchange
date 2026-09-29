@@ -1,17 +1,10 @@
 <flux:dropdown position="bottom" align="end">
-    <flux:profile
-        :name="auth()->user()->username"
-        :initials="auth()->user()->initials()"
-        icon:trailing="chevron-down"
-        data-test="sidebar-menu-button"
-    />
+    <flux:profile :name="auth()->user()->username" :initials="auth()->user()->initials()" icon:trailing="chevron-down"
+        data-test="sidebar-menu-button" />
 
     <flux:menu>
         <div class="flex items-center gap-2 px-1 py-1.5 text-start text-sm">
-            <flux:avatar
-                :name="auth()->user()->username"
-                :initials="auth()->user()->initials()"
-            />
+            <flux:avatar :name="auth()->user()->username" :initials="auth()->user()->initials()" />
             <div class="grid flex-1 text-start text-sm leading-tight">
                 <flux:heading class="truncate">{{ auth()->user()->username }}</flux:heading>
                 <flux:text class="truncate">{{ auth()->user()->email }}</flux:text>
@@ -19,18 +12,16 @@
         </div>
         <flux:menu.separator />
         <flux:menu.radio.group>
+            <flux:menu.item :href="route('profile.show', auth()->user())" icon="user-circle" wire:navigate>
+                Profile
+            </flux:menu.item>
             <flux:menu.item :href="route('profile.edit')" icon="cog" wire:navigate>
                 Settings
             </flux:menu.item>
             <form method="POST" action="{{ route('logout') }}" class="w-full">
                 @csrf
-                <flux:menu.item
-                    as="button"
-                    type="submit"
-                    icon="arrow-right-start-on-rectangle"
-                    class="w-full cursor-pointer"
-                    data-test="logout-button"
-                >
+                <flux:menu.item as="button" type="submit" icon="arrow-right-start-on-rectangle"
+                    class="w-full cursor-pointer" data-test="logout-button">
                     Log out
                 </flux:menu.item>
             </form>
