@@ -6,7 +6,7 @@ test('guests can view the landing page', function () {
     $response = $this->get(route('welcome'));
 
     $response->assertOk();
-    $response->assertSee('Trade what you know for what you need');
+    $response->assertSee('Get started for free');
     $response->assertSee(route('register'));
     $response->assertSee(route('login'));
 });

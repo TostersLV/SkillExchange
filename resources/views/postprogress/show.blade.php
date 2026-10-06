@@ -12,35 +12,17 @@ $otherUsername = $otherUser->username;
         <div class="mt-6 grid gap-6 lg:grid-cols-[380px_1fr]">
             <x-swap.card class="h-fit space-y-6">
                 <div class="flex items-center justify-between gap-2">
-                    <x-swap.badge>{{ $offer->post->category->name }}</x-swap.badge>
+                    <x-swap.badge><x-swap.category-icon :name="$offer->post->category->name" class="opacity-80" /> {{ $offer->post->category->name }}</x-swap.badge>
                     <x-swap.status :status="$offer->post->status" />
                 </div>
 
-                <div class="space-y-3">
-                    <div class="rounded-lg border border-line bg-raised p-4">
-                        <p class="eyebrow">Offering</p>
-                        <h1 class="mt-1 text-lg leading-snug font-semibold break-words text-strong">
-                            {{ $offer->post->offering_skill }}</h1>
-                    </div>
+                <x-swap.trade :offering="$offer->post->offering_skill" :looking="$offer->post->looking_skill"
+                    :active="$offer->post->status === \App\PostStatus::IN_PROGRESS" stacked :heading-level="1" />
 
-                    <div class="flex justify-center text-strong">
-                        <span class="flex size-7 items-center justify-center rounded-full border border-line-strong bg-surface">
-                            <x-swap.icon class="size-3.5 rotate-90" />
-                            <span class="sr-only">in exchange for</span>
-                        </span>
-                    </div>
-
-                    <div class="rounded-lg border border-line bg-raised p-4">
-                        <p class="eyebrow">Looking for</p>
-                        <p class="mt-1 text-lg leading-snug font-semibold break-words text-strong">
-                            {{ $offer->post->looking_skill }}</p>
-                    </div>
+                <div class="space-y-2 border-t border-line pt-5">
+                    <p class="eyebrow">Swapping with</p>
+                    <x-swap.member :user="$otherUser" link />
                 </div>
-
-                <p class="border-t border-line pt-5 text-sm text-muted">
-                    Posted by <a href="{{ route('profile.show', $offer->post->user) }}" wire:navigate class="font-medium text-strong underline decoration-line-strong underline-offset-2 transition-colors hover:decoration-brand">{{ $offer->post->user->username }}</a> &middot;
-                    {{ $offer->post->created_at->diffForHumans() }}
-                </p>
 
                 <div class="border-t border-line pt-5">
                     @if ($offer->post->status === \App\PostStatus::COMPLETED)
@@ -86,7 +68,7 @@ $otherUsername = $otherUser->username;
                                     close it.</p>
                             @endif
 
-                            <x-swap.button type="submit" class="w-full">
+                            <x-swap.button type="submit" variant="swap" class="w-full">
                                 <flux:icon.check variant="micro" />
                                 Mark as complete
                             </x-swap.button>

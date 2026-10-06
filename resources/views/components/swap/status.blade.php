@@ -1,9 +1,9 @@
 @props(['status'])
 
 @php
-    // Differentiated by icon plus a subtle tint; amber is reserved for things still in motion.
+    // Differentiated by icon plus a subtle tint: emerald for open to swap, amber for things still in motion.
     [$icon, $tone] = match ($status) {
-        \App\PostStatus::AVAILABLE => ['sparkles', 'neutral'],
+        \App\PostStatus::AVAILABLE => ['sparkles', 'swap'],
         \App\PostStatus::IN_PROGRESS => ['clock', 'amber'],
         \App\PostStatus::COMPLETED => ['check', 'strong'],
         \App\PostStatus::CANCELLED => ['x-mark', 'neutral'],

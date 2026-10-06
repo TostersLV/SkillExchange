@@ -9,16 +9,20 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
- * SkillExchange palette: navy, paper, amber (+ white for card surfaces).
- * Every other color in the UI is a tint, shade or transparency of these.
+ * SkillExchange palette: navy, warm paper, emerald for swaps and positive actions,
+ * amber for ratings only (+ white for card surfaces).
  */
 @theme {
-    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
-    --color-navy: #1b2a4e;
-    --color-paper: #f7f8fa;
-    --color-amber: #e8a33d;
+    --color-navy: #0f1e3d;
+    --color-paper: #fafaf7;
+    --color-amber: #f59e0b;
     --color-error: #b0413e;
+    --color-swap: #10b981;
+    --color-swap-strong: #047857;
+    --color-swap-soft: var(--role-swap-soft);
+    --color-swap-text: var(--role-swap-text);
 
     /* Semantic roles that flip between light and dark mode. */
     --color-page: var(--role-page);
@@ -41,17 +45,19 @@
 }
 
 :root {
-    --role-page: #f7f8fa;
+    --role-page: #fafaf7;
     --role-surface: #ffffff;
-    --role-raised: color-mix(in oklab, #1b2a4e 4%, #ffffff);
-    --role-strong: #1b2a4e;
-    --role-fg: color-mix(in oklab, #1b2a4e 85%, transparent);
-    --role-muted: color-mix(in oklab, #1b2a4e 70%, transparent);
-    --role-line: color-mix(in oklab, #1b2a4e 9%, transparent);
-    --role-line-strong: color-mix(in oklab, #1b2a4e 18%, transparent);
-    --role-brand: #1b2a4e;
+    --role-raised: #f1f0ec;
+    --role-strong: #0f1e3d;
+    --role-fg: color-mix(in oklab, #0f1e3d 85%, transparent);
+    --role-muted: color-mix(in oklab, #0f1e3d 70%, transparent);
+    --role-line: #e7e5e0;
+    --role-line-strong: #d6d3cc;
+    --role-brand: #0f1e3d;
     --role-on-brand: #ffffff;
-    --role-band: #1b2a4e;
+    --role-band: #0f1e3d;
+    --role-swap-soft: #ecfdf5;
+    --role-swap-text: #047857;
 }
 
 .dark {
@@ -65,8 +71,10 @@
     --role-line: color-mix(in oklab, #f7f8fa 8%, transparent);
     --role-line-strong: color-mix(in oklab, #f7f8fa 15%, transparent);
     --role-brand: #f7f8fa;
-    --role-on-brand: #1b2a4e;
+    --role-on-brand: #0f1e3d;
     --role-band: #12161d;
+    --role-swap-soft: color-mix(in oklab, #10b981 14%, transparent);
+    --role-swap-text: #6ee7b7;
 }
 
 /*
@@ -76,28 +84,28 @@
  */
 @layer theme {
     :root {
-        --color-zinc-50: color-mix(in oklab, #1b2a4e 3%, #ffffff);
-        --color-zinc-100: color-mix(in oklab, #1b2a4e 6%, #ffffff);
-        --color-zinc-200: color-mix(in oklab, #1b2a4e 14%, #ffffff);
-        --color-zinc-300: color-mix(in oklab, #1b2a4e 24%, #ffffff);
-        --color-zinc-400: color-mix(in oklab, #1b2a4e 45%, #ffffff);
-        --color-zinc-500: color-mix(in oklab, #1b2a4e 72%, #ffffff);
-        --color-zinc-600: color-mix(in oklab, #1b2a4e 80%, #ffffff);
-        --color-zinc-700: color-mix(in oklab, #1b2a4e 92%, #ffffff);
-        --color-zinc-800: #1b2a4e;
-        --color-zinc-900: #1b2a4e;
+        --color-zinc-50: color-mix(in oklab, #0f1e3d 3%, #ffffff);
+        --color-zinc-100: color-mix(in oklab, #0f1e3d 6%, #ffffff);
+        --color-zinc-200: color-mix(in oklab, #0f1e3d 14%, #ffffff);
+        --color-zinc-300: color-mix(in oklab, #0f1e3d 24%, #ffffff);
+        --color-zinc-400: color-mix(in oklab, #0f1e3d 45%, #ffffff);
+        --color-zinc-500: color-mix(in oklab, #0f1e3d 72%, #ffffff);
+        --color-zinc-600: color-mix(in oklab, #0f1e3d 80%, #ffffff);
+        --color-zinc-700: color-mix(in oklab, #0f1e3d 92%, #ffffff);
+        --color-zinc-800: #0f1e3d;
+        --color-zinc-900: #0f1e3d;
         --color-zinc-950: #0f1830;
 
-        --color-green-50: color-mix(in oklab, #1b2a4e 4%, #ffffff);
-        --color-green-100: color-mix(in oklab, #1b2a4e 8%, #ffffff);
-        --color-green-200: color-mix(in oklab, #1b2a4e 18%, #ffffff);
-        --color-green-300: color-mix(in oklab, #1b2a4e 35%, #ffffff);
-        --color-green-400: color-mix(in oklab, #1b2a4e 60%, #ffffff);
-        --color-green-500: #1b2a4e;
-        --color-green-600: #1b2a4e;
-        --color-green-700: #1b2a4e;
-        --color-green-800: #1b2a4e;
-        --color-green-900: #1b2a4e;
+        --color-green-50: color-mix(in oklab, #0f1e3d 4%, #ffffff);
+        --color-green-100: color-mix(in oklab, #0f1e3d 8%, #ffffff);
+        --color-green-200: color-mix(in oklab, #0f1e3d 18%, #ffffff);
+        --color-green-300: color-mix(in oklab, #0f1e3d 35%, #ffffff);
+        --color-green-400: color-mix(in oklab, #0f1e3d 60%, #ffffff);
+        --color-green-500: #0f1e3d;
+        --color-green-600: #0f1e3d;
+        --color-green-700: #0f1e3d;
+        --color-green-800: #0f1e3d;
+        --color-green-900: #0f1e3d;
         --color-green-950: #0f1830;
 
         --color-red-50: color-mix(in oklab, #b0413e 6%, #ffffff);
@@ -175,7 +183,7 @@
     }
 
     ::selection {
-        background-color: color-mix(in oklab, #e8a33d 35%, transparent);
+        background-color: color-mix(in oklab, #f59e0b 35%, transparent);
     }
 }
 
@@ -191,19 +199,68 @@
 }
 
 @utility card-shadow {
-    box-shadow: 0 1px 2px color-mix(in oklab, #1b2a4e 5%, transparent), 0 1px 3px color-mix(in oklab, #1b2a4e 4%, transparent);
+    box-shadow: 0 1px 2px color-mix(in oklab, #0f1e3d 4%, transparent), 0 8px 24px -12px color-mix(in oklab, #0f1e3d 14%, transparent);
 
     &:where(.dark, .dark *) {
-        box-shadow: 0 1px 2px color-mix(in oklab, #000000 30%, transparent);
+        box-shadow: 0 1px 2px color-mix(in oklab, #000000 30%, transparent), 0 8px 24px -12px color-mix(in oklab, #000000 50%, transparent);
     }
 }
 
 @utility card-shadow-hover {
-    box-shadow: 0 2px 4px color-mix(in oklab, #1b2a4e 6%, transparent), 0 12px 24px -8px color-mix(in oklab, #1b2a4e 14%, transparent);
+    box-shadow: 0 2px 6px color-mix(in oklab, #0f1e3d 6%, transparent), 0 24px 48px -20px color-mix(in oklab, #0f1e3d 28%, transparent);
 
     &:where(.dark, .dark *) {
-        box-shadow: 0 2px 4px color-mix(in oklab, #000000 30%, transparent), 0 12px 24px -8px color-mix(in oklab, #000000 45%, transparent);
+        box-shadow: 0 2px 6px color-mix(in oklab, #000000 35%, transparent), 0 24px 48px -20px color-mix(in oklab, #000000 65%, transparent);
     }
+}
+
+/* Navy → amber gradient for key words (paper → amber in dark mode). */
+@utility text-gradient {
+    background-image: linear-gradient(100deg, #0f1e3d 10%, #f59e0b 95%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+
+    &:where(.dark, .dark *) {
+        background-image: linear-gradient(100deg, #f7f8fa 10%, #f59e0b 95%);
+    }
+}
+
+/* Solid navy tile, used for the brand mark and icon tiles. */
+@utility bg-brand-gradient {
+    background-color: #0f1e3d;
+}
+
+/* Soft glow behind the top of each page for depth. */
+@utility page-glow {
+    background-image:
+        radial-gradient(60rem 28rem at 50% -8rem, color-mix(in oklab, #f59e0b 12%, transparent), transparent 70%),
+        radial-gradient(40rem 24rem at 90% 0, color-mix(in oklab, #0f1e3d 8%, transparent), transparent 70%);
+    background-repeat: no-repeat;
+
+    &:where(.dark, .dark *) {
+        background-image:
+            radial-gradient(60rem 28rem at 50% -8rem, color-mix(in oklab, #f59e0b 9%, transparent), transparent 70%),
+            radial-gradient(40rem 24rem at 90% 0, color-mix(in oklab, #f7f8fa 4%, transparent), transparent 70%);
+    }
+}
+
+/* Live activity ticker: the track holds the items twice and slides by half its width for a seamless loop. */
+@keyframes ticker {
+    from {
+        transform: translateX(0);
+    }
+    to {
+        transform: translateX(-50%);
+    }
+}
+
+@utility animate-ticker {
+    animation: ticker 45s linear infinite;
+}
+
+@utility mask-fade-x {
+    mask-image: linear-gradient(90deg, transparent, #000 2.5rem, #000 calc(100% - 2.5rem), transparent);
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -237,11 +294,15 @@ textarea[data-flux-control],
 select[data-flux-control] {
     border-width: 1px !important;
     border-color: var(--color-line-strong) !important;
-    border-radius: 0.5rem !important;
+    border-radius: 0.875rem !important;
     background-color: var(--color-surface) !important;
     color: var(--color-strong) !important;
     box-shadow: none !important;
     transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+input[data-flux-control]:not([type="checkbox"], [type="radio"]) {
+    min-height: 2.75rem;
 }
 
 input[data-flux-control]::placeholder,
@@ -265,7 +326,7 @@ select:focus[data-flux-control] {
 [data-flux-callout] {
     border-width: 1px !important;
     border-color: var(--color-line) !important;
-    border-radius: 0.75rem !important;
+    border-radius: 1.25rem !important;
     background-color: var(--color-surface) !important;
 }
 
@@ -273,8 +334,9 @@ select:focus[data-flux-control] {
 [data-flux-menu] {
     border-width: 1px !important;
     border-color: var(--color-line) !important;
-    border-radius: 0.75rem !important;
+    border-radius: 1.25rem !important;
     background-color: var(--color-surface) !important;
+    box-shadow: 0 24px 48px -20px color-mix(in oklab, #0f1e3d 30%, transparent);
 }
 
 [data-flux-avatar] {
@@ -289,16 +351,18 @@ select:focus[data-flux-control] {
     font-weight: 500;
 }
 
-/* Navbar: navy-70% links, full navy + thin amber underline when active. */
+/* Header navigation: quiet links, a soft filled pill for the current page. */
 [data-flux-header] [data-flux-navbar-items] {
     color: var(--color-muted) !important;
     font-weight: 500;
-    transition: color 150ms ease;
+    border-radius: 999px !important;
+    padding-inline: 0.875rem !important;
+    transition: color 150ms ease, background-color 150ms ease;
 }
 
 [data-flux-header] [data-flux-navbar-items]:hover {
     color: var(--color-strong) !important;
-    background-color: transparent !important;
+    background-color: color-mix(in oklab, var(--color-brand) 6%, transparent) !important;
 }
 
 [data-flux-header] [data-flux-navbar-items] [data-flux-icon] {
@@ -307,18 +371,12 @@ select:focus[data-flux-control] {
 
 [data-flux-header] [data-flux-navbar-items][data-current] {
     color: var(--color-strong) !important;
+    font-weight: 600;
+    background-color: var(--color-raised) !important;
 }
 
 [data-flux-navbar-items][data-current]::after {
-    background-color: var(--color-amber) !important;
-    height: 2px !important;
-    border-radius: 999px;
-}
-
-/* Sit the active underline on the header's bottom border (64px header, 32px item). */
-[data-flux-header] [data-flux-navbar-items][data-current]::after {
-    bottom: -16px !important;
-    inset-inline: 0.75rem !important;
+    display: none !important;
 }
 
 /* Mobile menu and settings navigation: quiet navy tint + amber edge for the current item. */
@@ -327,7 +385,7 @@ select:focus[data-flux-control] {
     background-color: color-mix(in oklab, var(--color-brand) 8%, transparent) !important;
     border-color: transparent !important;
     color: var(--color-strong) !important;
-    box-shadow: inset 2px 0 0 var(--color-amber);
+    border-radius: 999px !important;
 }
 
 /* On phones the profile trigger shrinks to just the avatar so the header fits. */

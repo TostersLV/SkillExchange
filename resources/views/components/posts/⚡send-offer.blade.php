@@ -53,29 +53,34 @@ new class extends Component {
 
 <div>
     @if ($this->isOwner())
+        <x-swap.badge>This is your post</x-swap.badge>
     @elseif ($this->hasOffered())
-        <x-swap.badge icon="check-circle">Offer sent</x-swap.badge>
+        <x-swap.badge icon="check-circle" tone="swap">Offer sent</x-swap.badge>
     @elseif (! $this->isAvailable())
         <x-swap.badge icon="lock-closed">No longer available</x-swap.badge>
     @else
-        <x-swap.button size="sm" wire:click="$set('showModal', true)">
+        <x-swap.button variant="swap" wire:click="$set('showModal', true)">
             <x-swap.icon class="size-4" />
-            Send offer
+            Propose swap
         </x-swap.button>
 
-        <flux:modal wire:model.self="showModal" class="md:w-96">
-            <form wire:submit="sendOffer" class="space-y-4">
-                <flux:heading size="lg">Send an offer</flux:heading>
-                <flux:text>Offer to help {{ $post->user->username }} with their post.</flux:text>
+        <flux:modal wire:model.self="showModal" class="md:w-[28rem]">
+            <form wire:submit="sendOffer" class="space-y-5">
+                <div class="space-y-1">
+                    <flux:heading size="lg">Propose a swap</flux:heading>
+                    <flux:text>Offer {{ $post->user->username }} a trade for their post.</flux:text>
+                </div>
+
+                <x-swap.trade :offering="$post->offering_skill" :looking="$post->looking_skill" stacked />
 
                 <flux:textarea wire:model="message" label="Message (optional)" rows="3"
-                    placeholder="Introduce yourself or add details..." />
+                    placeholder="Introduce yourself, say what you can teach and when you're free..." />
 
                 <div class="flex justify-end gap-2">
                     <flux:modal.close>
                         <x-swap.button variant="ghost">Cancel</x-swap.button>
                     </flux:modal.close>
-                    <x-swap.button type="submit" variant="primary">Send offer</x-swap.button>
+                    <x-swap.button type="submit" variant="swap">Send proposal</x-swap.button>
                 </div>
             </form>
         </flux:modal>

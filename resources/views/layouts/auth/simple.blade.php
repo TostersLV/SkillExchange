@@ -10,11 +10,11 @@
 
                 <div class="max-w-md">
                     <span
-                        class="inline-flex items-center gap-1.5 rounded-full border border-amber/50 px-3 py-1 text-xs font-semibold text-paper">
-                        <flux:icon.banknotes variant="micro" class="size-3.5 text-amber" aria-hidden="true" />
+                        class="inline-flex items-center gap-1.5 rounded-full border border-swap/50 px-3 py-1 text-xs font-semibold text-paper">
+                        <flux:icon.banknotes variant="micro" class="size-3.5 text-swap" aria-hidden="true" />
                         No money involved
                     </span>
-                    <p class="mt-6 text-4xl leading-[1.15] font-semibold tracking-tight text-paper">
+                    <p class="mt-6 text-4xl leading-[1.1] font-extrabold tracking-[-0.03em] text-paper">
                         Trade what you know for what you need
                     </p>
                     <p class="mt-4 leading-7 text-paper/75">
@@ -23,7 +23,7 @@
                 </div>
 
                 <p class="flex items-center gap-2 text-sm text-paper/70">
-                    <flux:icon.shield-check variant="micro" class="size-4 text-amber" aria-hidden="true" />
+                    <flux:icon.shield-check variant="micro" class="size-4 text-swap" aria-hidden="true" />
                     Every exchange ends with a mutual review.
                 </p>
             </aside>

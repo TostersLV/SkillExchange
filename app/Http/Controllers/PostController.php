@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Post;
 use App\Models\PostOffer;
+use App\PostStatus;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 
@@ -15,9 +17,82 @@ class PostController extends Controller
 {
     public function index(): View
     {
-        $awaitingReview = PostOffer::query()->awaitingReviewBy(Auth::user())->with(['post', 'user'])->latest()->get();
+        $user = Auth::user();
 
-        return view('posts.index', compact('awaitingReview'));
+        $awaitingReview = PostOffer::query()->awaitingReviewBy($user)->with(['post', 'user'])->latest()->get();
+
+        $pendingOffersCount = $user->pendingReceivedOffersCount();
+
+        $activeExchangesCount = $user->exchanges()
+            ->whereRelation('post', 'status', PostStatus::IN_PROGRESS)
+            ->count();
+
+        $completedExchangesCount = $user->completedExchangesCount();
+
+        $reviewsCount = $user->reviewsReceived()->count();
+
+        $taughtSkills = $user->posts()->latest()->pluck('offering_skill')->unique()->take(3);
+
+        return view('posts.index', [
+            'awaitingReview' => $awaitingReview,
+            'pendingOffersCount' => $pendingOffersCount,
+            'activeExchangesCount' => $activeExchangesCount,
+            'completedExchangesCount' => $completedExchangesCount,
+            'reviewsCount' => $reviewsCount,
+            'taughtSkills' => $taughtSkills,
+            'activity' => $this->recentActivity(),
+        ]);
+    }
+
+    /**
+     * Recent things that happened on the platform, for the live activity strip.
+     *
+     * @return Collection<int, array{lead: string, text: string, time: string|null}>
+     */
+    private function recentActivity(): Collection
+    {
+        $completedSwaps = Post::query()
+            ->with('user')
+            ->where('status', PostStatus::COMPLETED)
+            ->latest('updated_at')
+            ->limit(3)
+            ->get()
+            ->map(fn (Post $post) => [
+                'lead' => $post->user->username,
+                'text' => "swapped {$post->offering_skill} → {$post->looking_skill}",
+                'time' => $post->updated_at->diffForHumans(),
+            ]);
+
+        $newPosts = Post::query()
+            ->where('status', PostStatus::AVAILABLE)
+            ->latest()
+            ->limit(3)
+            ->get()
+            ->map(fn (Post $post) => [
+                'lead' => 'New:',
+                'text' => "{$post->offering_skill} ⇄ {$post->looking_skill}",
+                'time' => $post->created_at->diffForHumans(),
+            ]);
+
+        $completedThisWeek = Post::query()
+            ->where('status', PostStatus::COMPLETED)
+            ->where('updated_at', '>=', now()->subWeek())
+            ->count();
+
+        $activity = collect(range(0, 2))
+            ->flatMap(fn (int $index) => [$newPosts->get($index), $completedSwaps->get($index)])
+            ->filter()
+            ->values();
+
+        if ($completedThisWeek > 0) {
+            $activity->push([
+                'lead' => (string) $completedThisWeek,
+                'text' => str('exchange')->plural($completedThisWeek).' completed this week',
+                'time' => null,
+            ]);
+        }
+
+        return $activity;
     }
 
     public function show(Post $post): View|RedirectResponse

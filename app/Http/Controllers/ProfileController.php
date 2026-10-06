@@ -17,6 +17,11 @@ class ProfileController extends Controller
             ->latest()
             ->get();
 
-        return view('profile.show', compact('user', 'posts'));
+        return view('profile.show', [
+            'user' => $user,
+            'posts' => $posts,
+            'reviewsCount' => $user->reviewsReceived()->count(),
+            'completedExchangesCount' => $user->completedExchangesCount(),
+        ]);
     }
 }

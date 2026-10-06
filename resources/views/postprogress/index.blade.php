@@ -1,7 +1,7 @@
 <x-layouts::app title="In Progress">
-    <div class="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6 lg:py-14">
+    <div class="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6 lg:py-14">
         <x-swap.page-header title="In progress">
-            Exchanges you're currently part of.
+            Exchanges you're currently part of. Open one to chat and mark it complete.
         </x-swap.page-header>
 
         @if ($matches->isEmpty())
@@ -12,35 +12,27 @@
                 </x-slot>
             </x-swap.empty>
         @else
-            <div class="mt-8 space-y-3">
+            <p class="mt-8 mb-3 text-sm text-muted">
+                <strong class="font-bold text-strong">{{ $matches->count() }}</strong> {{ str('exchange')->plural($matches->count()) }}
+            </p>
+
+            <div class="space-y-3">
                 @foreach ($matches as $match)
-                    @php($isSender = $match->user_id === auth()->id())
-                    @php($otherUsername = $isSender ? $match->post->user->username : $match->user->username)
+                    @php($otherUser = $match->user_id === auth()->id() ? $match->post->user : $match->user)
+                    @php($isOpen = $match->post->status === \App\PostStatus::IN_PROGRESS)
                     <a href="{{ route('posts.progress.show', $match) }}" wire:navigate wire:key="match-{{ $match->id }}"
-                        class="group block rounded-xl motion-safe:animate-fade-in focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand">
-                        <x-swap.card interactive class="flex flex-col gap-4 sm:flex-row sm:items-center">
-                            <span
-                                class="flex size-10 shrink-0 items-center justify-center rounded-lg border border-line bg-raised text-strong">
-                                <x-swap.icon class="size-5" />
+                        class="group grid items-center gap-5 rounded-2xl border border-line bg-surface p-5 card-shadow transition-[box-shadow,border-color] duration-200 motion-safe:animate-fade-in hover:border-line-strong hover:card-shadow-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand sm:px-6 lg:grid-cols-[220px_minmax(0,1fr)_auto] lg:gap-6">
+                        <x-swap.member :user="$otherUser" :caption="'Started '.$match->created_at->diffForHumans()" />
+
+                        <x-swap.trade :offering="$match->post->offering_skill" :looking="$match->post->looking_skill" :active="$isOpen" />
+
+                        <div class="flex items-center justify-between gap-3 lg:justify-end">
+                            <x-swap.status :status="$match->post->status" />
+                            <span class="inline-flex h-10 items-center gap-1.5 rounded-xl border border-line px-4 text-sm font-semibold text-strong transition-colors group-hover:bg-raised">
+                                <flux:icon.chat-bubble-left-right variant="micro" class="size-4" aria-hidden="true" />
+                                Open
                             </span>
-
-                            <div class="min-w-0 flex-1">
-                                <p class="font-semibold break-words text-strong">
-                                    {{ $match->post->offering_skill }}
-                                    <span class="font-normal text-muted">for</span>
-                                    {{ $match->post->looking_skill }}
-                                </p>
-                                <p class="mt-1 text-sm text-muted">
-                                    With <span class="font-medium text-fg">{{ $otherUsername }}</span> &middot;
-                                    started {{ $match->created_at->diffForHumans() }}
-                                </p>
-                            </div>
-
-                            <div class="flex items-center gap-3 self-start sm:self-center">
-                                <x-swap.status :status="$match->post->status" />
-                                <flux:icon.chevron-right variant="micro" class="size-4 text-muted max-sm:hidden" aria-hidden="true" />
-                            </div>
-                        </x-swap.card>
+                        </div>
                     </a>
                 @endforeach
             </div>

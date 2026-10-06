@@ -1,59 +1,69 @@
 <x-layouts::app title="Offers">
-    <div class="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6 lg:py-14">
+    <div class="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6 lg:py-14">
         <x-swap.page-header title="Offers">
-            Offers people have sent for your posts.
+            Swaps other members have proposed for your posts.
         </x-swap.page-header>
 
         @if ($offers->isEmpty())
             <x-swap.empty class="mt-8" icon="inbox" title="No offers yet">
-                When someone offers to exchange with one of your posts, it will appear here for you to accept or decline.
+                When someone proposes a swap for one of your posts, it will appear here for you to accept or decline.
                 <x-slot name="actions">
-                    <x-swap.button href="{{ route('posts.create') }}" size="sm">Share a skill</x-swap.button>
+                    <x-swap.button href="{{ route('posts.create') }}" variant="swap" size="sm">Post an exchange</x-swap.button>
                 </x-slot>
             </x-swap.empty>
         @else
-            <div class="mt-8 space-y-3">
+            <p class="mt-8 mb-3 text-sm text-muted">
+                <strong class="font-bold text-strong">{{ $offers->count() }}</strong> {{ str('offer')->plural($offers->count()) }} received
+            </p>
+
+            <div class="space-y-3">
                 @foreach ($offers as $offer)
-                    <x-swap.card class="space-y-4 motion-safe:animate-fade-in" wire:key="offer-{{ $offer->id }}">
-                        <div class="flex items-start justify-between gap-3">
-                            <div class="min-w-0">
-                                <flux:heading size="lg">
-                                    <a href="{{ route('posts.show', $offer->post) }}" wire:navigate
-                                        class="rounded hover:underline">{{ $offer->post->offering_skill }}</a>
-                                </flux:heading>
-                                <flux:text size="sm" class="mt-1">
-                                    from
-                                    <a href="{{ route('profile.show', $offer->user) }}" wire:navigate
-                                        class="font-semibold text-brand underline decoration-brand/40 underline-offset-2 hover:decoration-brand">{{ $offer->user->username }}</a>
-                                    &middot; {{ $offer->created_at->diffForHumans() }}
-                                </flux:text>
+                    @php($isPending = $offer->status === \App\PostOfferStatus::PENDING)
+                    <x-swap.card padding="none" wire:key="offer-{{ $offer->id }}"
+                        :class="'space-y-4 p-5 motion-safe:animate-fade-in sm:p-6'.($isPending ? ' border-l-4 !border-l-swap sm:pl-[21px]' : '')">
+                        <div class="flex flex-wrap items-center justify-between gap-3">
+                            <x-swap.member :user="$offer->user" link />
+                            <div class="flex items-center gap-3">
+                                <span class="text-xs text-muted">{{ $offer->created_at->diffForHumans() }}</span>
+                                <x-swap.status :status="$offer->status" />
                             </div>
-                            <x-swap.status :status="$offer->status" />
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <p class="text-xs font-semibold text-muted">For your post</p>
+                            <a href="{{ route('posts.show', $offer->post) }}" wire:navigate class="group block rounded-full focus-visible:outline-offset-4">
+                                <x-swap.trade :offering="$offer->post->offering_skill" :looking="$offer->post->looking_skill"
+                                    :active="$offer->status !== \App\PostOfferStatus::REJECTED" />
+                            </a>
                         </div>
 
                         @if ($offer->message)
-                            <blockquote class="rounded-lg border border-line bg-raised px-4 py-3 text-sm leading-6 whitespace-pre-line text-fg">{{ $offer->message }}</blockquote>
+                            <blockquote class="rounded-2xl border border-line bg-raised px-4 py-3 text-sm leading-6 whitespace-pre-line text-fg">
+                                <span class="sr-only">{{ $offer->user->username }} wrote:</span>{{ $offer->message }}
+                            </blockquote>
                         @endif
 
-                        <div class="flex flex-wrap gap-2">
-                            @can('accept', $offer)
-                                <form method="POST" action="{{ route('post.offers.accept', $offer) }}">
-                                    @csrf
-                                    @method('PATCH')
-                                    <x-swap.button type="submit" size="sm" variant="primary">
-                                        <flux:icon.check variant="micro" />
-                                        Accept
-                                    </x-swap.button>
-                                </form>
-                            @endcan
-                            @can('reject', $offer)
-                                <form method="POST" action="{{ route('posts.offers.reject', $offer) }}">
-                                    @csrf
-                                    @method('DELETE')
-                                    <x-swap.button type="submit" size="sm" variant="danger">Reject</x-swap.button>
-                                </form>
-                            @endcan
-                        </div>
+                        @if (auth()->user()->can('accept', $offer) || auth()->user()->can('reject', $offer))
+                            <div class="flex flex-wrap justify-end gap-2 border-t border-line pt-4">
+                                @can('reject', $offer)
+                                    <form method="POST" action="{{ route('posts.offers.reject', $offer) }}">
+                                        @csrf
+                                        @method('DELETE')
+                                        <x-swap.button type="submit" size="sm" variant="danger">Decline</x-swap.button>
+                                    </form>
+                                @endcan
+                                @can('accept', $offer)
+                                    <form method="POST" action="{{ route('post.offers.accept', $offer) }}">
+                                        @csrf
+                                        @method('PATCH')
+                                        <x-swap.button type="submit" size="sm" variant="swap">
+                                            <flux:icon.check variant="micro" />
+                                            Accept swap
+                                        </x-swap.button>
+                                    </form>
+                                @endcan
+                            </div>
+                        @endif
                     </x-swap.card>
                 @endforeach
             </div>

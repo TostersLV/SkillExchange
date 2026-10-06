@@ -2,21 +2,25 @@
 
 @php
     $variants = [
-        'primary' => 'bg-brand text-on-brand hover:bg-brand/90',
-        // Outline: amber on hover, always with navy text (never white on amber).
-        'secondary' => 'border border-line-strong bg-surface text-strong hover:border-amber hover:bg-amber hover:text-navy',
+        'primary' => 'bg-brand text-on-brand shadow-[0_8px_20px_-8px_color-mix(in_oklab,var(--color-brand)_55%,transparent)] hover:-translate-y-px hover:bg-brand/90 hover:shadow-[0_12px_24px_-8px_color-mix(in_oklab,var(--color-brand)_60%,transparent)]',
+        // Emerald: the "make a swap" call to action (post an exchange, propose a swap).
+        'swap' => 'bg-swap-strong text-white shadow-[0_8px_20px_-8px_color-mix(in_oklab,var(--color-swap-strong)_60%,transparent)] hover:-translate-y-px hover:bg-[#065f46]',
+        'secondary' => 'border border-line-strong bg-surface text-strong hover:-translate-y-px hover:border-strong/40 hover:bg-raised',
         'ghost' => 'text-fg hover:bg-brand/6 hover:text-strong',
         'danger' => 'border border-error/40 bg-surface text-error hover:border-error hover:bg-error/6 dark:text-red-400 dark:border-red-400/40',
+        // For navy backgrounds (landing hero / call-to-action).
+        'inverse' => 'bg-paper text-navy shadow-[0_8px_24px_-10px_rgba(0,0,0,0.5)] hover:-translate-y-px hover:bg-white focus-visible:outline-paper',
+        'outline-inverse' => 'border border-paper/30 text-paper hover:border-paper/60 hover:bg-paper/10 focus-visible:outline-paper',
     ];
 
     $sizes = [
-        'sm' => 'h-9 px-3.5 text-sm',
-        'md' => 'h-10 px-4.5 text-sm',
-        'lg' => 'h-12 px-6 text-base',
+        'sm' => 'h-9 px-4 text-sm',
+        'md' => 'h-11 px-5 text-sm',
+        'lg' => 'h-13 px-7 text-base',
     ];
 
-    $classes = 'inline-flex items-center justify-center gap-2 rounded-lg font-semibold whitespace-nowrap '
-        .'transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand '
+    $classes = 'inline-flex items-center justify-center gap-2 rounded-xl font-semibold whitespace-nowrap '
+        .'transition-[color,background-color,border-color,box-shadow,translate] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand '
         .'disabled:pointer-events-none disabled:opacity-45 [&_svg]:size-4 [&_svg]:shrink-0 '
         .($variants[$variant] ?? $variants['primary']).' '
         .($sizes[$size] ?? $sizes['md']);

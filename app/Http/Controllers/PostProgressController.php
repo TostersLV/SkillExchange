@@ -19,8 +19,8 @@ class PostProgressController extends Controller
     public function index(): View
     {
         $matches = PostOffer::query()->with(['post', 'user'])->where('status', PostOfferStatus::ACCEPTED)->where(function ($query) {
-                $query->where('user_id', Auth::id())->orWhereRelation('post', 'user_id', Auth::id());
-            })->latest()->get();
+            $query->where('user_id', Auth::id())->orWhereRelation('post', 'user_id', Auth::id());
+        })->latest()->get();
 
         return view('postprogress.index', compact('matches'));
     }
