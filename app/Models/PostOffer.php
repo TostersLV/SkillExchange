@@ -33,6 +33,19 @@ class PostOffer extends Model
         ];
     }
 
+    /**
+     * Reload the offer with its post, locking the post row first so actions on sibling offers run one at a time.
+     */
+    public function lockWithPost(): self
+    {
+        $post = Post::query()->lockForUpdate()->findOrFail($this->post_id);
+
+        $offer = self::query()->lockForUpdate()->findOrFail($this->id);
+        $offer->setRelation('post', $post);
+
+        return $offer;
+    }
+
     public function hasBeenCompletedBy(User $user): bool
     {
         return $this->completeOffers()->where('user_id', $user->id)->exists();
@@ -41,6 +54,16 @@ class PostOffer extends Model
     public function hasBeenCompletedByOther(User $user): bool
     {
         return $this->completeOffers()->where('user_id', '!=', $user->id)->exists();
+    }
+
+    public function hasRequestedCancelBy(User $user): bool
+    {
+        return $this->cancelOffers()->where('user_id', $user->id)->exists();
+    }
+
+    public function hasRequestedCancelByOther(User $user): bool
+    {
+        return $this->cancelOffers()->where('user_id', '!=', $user->id)->exists();
     }
 
     public function hasBeenReviewedBy(User $user): bool
@@ -95,6 +118,16 @@ class PostOffer extends Model
     public function completeOffers(): HasMany
     {
         return $this->hasMany(CompleteOffer::class);
+    }
+
+    /**
+     * The agreements to cancel this offer's exchange, one per participant.
+     *
+     * @return HasMany<CancelOffer, $this>
+     */
+    public function cancelOffers(): HasMany
+    {
+        return $this->hasMany(CancelOffer::class);
     }
 
     /**

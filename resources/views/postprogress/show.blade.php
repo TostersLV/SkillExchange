@@ -51,9 +51,9 @@ $otherUsername = $otherUser->username;
                         @endif
                     @elseif ($offer->hasBeenCompletedBy(auth()->user()))
                         <div class="space-y-3">
-                            <p class="flex items-center gap-2 text-sm text-muted">
-                                <flux:icon.clock variant="micro" class="size-4" aria-hidden="true" />
-                                Waiting for <a href="{{ route('profile.show', $otherUser) }}" wire:navigate class="font-medium text-strong underline decoration-line-strong underline-offset-2 transition-colors hover:decoration-brand">{{ $otherUsername }}</a> to confirm
+                            <p class="flex items-start gap-2 text-sm leading-6 text-muted">
+                                <flux:icon.clock variant="micro" class="mt-1 size-4 shrink-0" aria-hidden="true" />
+                                <span>Waiting for <a href="{{ route('profile.show', $otherUser) }}" wire:navigate class="font-medium text-strong underline decoration-line-strong underline-offset-2 transition-colors hover:decoration-brand">{{ $otherUsername }}</a> to confirm</span>
                             </p>
 
                             <x-swap.button disabled class="w-full">Mark as complete</x-swap.button>
@@ -73,6 +73,32 @@ $otherUsername = $otherUser->username;
                                 Mark as complete
                             </x-swap.button>
                         </form>
+                    @endif
+
+                    @if ($offer->post->status === \App\PostStatus::IN_PROGRESS)
+                        @if ($offer->hasRequestedCancelBy(auth()->user()))
+                            <div class="mt-3 space-y-3">
+                                <p class="flex items-start gap-2 text-sm leading-6 text-muted">
+                                    <flux:icon.clock variant="micro" class="mt-1 size-4 shrink-0" aria-hidden="true" />
+                                    <span>Waiting for <a href="{{ route('profile.show', $otherUser) }}" wire:navigate class="font-medium text-strong underline decoration-line-strong underline-offset-2 transition-colors hover:decoration-brand">{{ $otherUsername }}</a> to agree to cancel</span>
+                                </p>
+
+                                <x-swap.button variant="danger" disabled class="w-full">Cancel exchange</x-swap.button>
+                            </div>
+                        @else
+                            <form method="POST" action="{{ route('posts.progress.cancel', $offer) }}" class="mt-3 space-y-3"
+                                onsubmit="return confirm('Cancel this exchange? It is called off once you both agree.')">
+                                @csrf
+                                @method('PATCH')
+
+                                @if ($offer->hasRequestedCancelByOther(auth()->user()))
+                                    <p class="text-sm text-muted"><a href="{{ route('profile.show', $otherUser) }}" wire:navigate class="font-medium text-strong underline decoration-line-strong underline-offset-2 transition-colors hover:decoration-brand">{{ $otherUsername }}</a> wants to cancel this exchange. Agree to
+                                        call it off.</p>
+                                @endif
+
+                                <x-swap.button type="submit" variant="danger" class="w-full">Cancel exchange</x-swap.button>
+                            </form>
+                        @endif
                     @endif
                 </div>
             </x-swap.card>

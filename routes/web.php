@@ -20,6 +20,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('progress/{offer}', [PostProgressController::class, 'show'])->name('posts.progress.show');
     Route::patch('progress/{offer}/complete', [PostProgressController::class, 'complete'])->name('posts.progress.complete');
     Route::patch('progress/{offer}/review', [PostProgressController::class, 'review'])->name('posts.progress.review');
+    Route::patch('progress/{offer}/cancel', [PostProgressController::class, 'cancel'])->name('posts.progress.cancel');
     Route::patch('offers/{offer}/accept', [PostOfferController::class, 'accept'])->name('post.offers.accept');
 
     Route::get('posts/create', [PostController::class, 'create'])->name('posts.create');

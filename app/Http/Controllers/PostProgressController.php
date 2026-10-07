@@ -41,7 +41,7 @@ class PostProgressController extends Controller
         $user = $request->user();
 
         DB::transaction(function () use ($offer, $user) {
-            $offer = PostOffer::with('post')->lockForUpdate()->findOrFail($offer->id);
+            $offer = $offer->lockWithPost();
 
             Gate::forUser($user)->authorize('complete', $offer);
 
@@ -50,10 +50,55 @@ class PostProgressController extends Controller
             if ($offer->completeOffers()->count() === 2) {
                 $offer->post->status = PostStatus::COMPLETED;
                 $offer->post->save();
+
+                // The author picked this partner, so close every other exchange and offer on the post
+                $offer->post->offers()
+                    ->whereKeyNot($offer->id)
+                    ->whereIn('status', [PostOfferStatus::PENDING, PostOfferStatus::ACCEPTED])
+                    ->update(['status' => PostOfferStatus::REJECTED]);
             }
         });
 
         return back();
+    }
+
+    /**
+     * Agree to cancel an in-progress exchange. Once both participants agree it's closed, and the post
+     * opens for offers again if the author has no other exchanges running on it.
+     */
+    public function cancel(Request $request, PostOffer $offer): RedirectResponse
+    {
+        $user = $request->user();
+
+        $isCancelled = DB::transaction(function () use ($offer, $user) {
+            $offer = $offer->lockWithPost();
+
+            Gate::forUser($user)->authorize('cancelExchange', $offer);
+
+            $offer->cancelOffers()->create(['user_id' => $user->id]);
+
+            if ($offer->cancelOffers()->count() < 2) {
+                return false;
+            }
+
+            $offer->status = PostOfferStatus::REJECTED;
+            $offer->save();
+
+            if ($offer->post->offers()->where('status', PostOfferStatus::ACCEPTED)->doesntExist()) {
+                $offer->post->status = PostStatus::AVAILABLE;
+                $offer->post->save();
+            }
+
+            return true;
+        });
+
+        if (! $isCancelled) {
+            return back();
+        }
+
+        return $offer->post->user_id === $user->id
+            ? redirect()->route('posts.offers')
+            : redirect()->route('posts.progress');
     }
 
     public function review(Request $request, PostOffer $offer): RedirectResponse

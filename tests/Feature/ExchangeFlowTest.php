@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Post;
 use App\Models\PostOffer;
 use App\Models\User;
 use App\PostOfferStatus;
@@ -145,4 +146,119 @@ test('a participant can open the exchange page', function () {
         ->assertOk()
         ->assertSee($offer->post->offering_skill)
         ->assertSee('Mark as complete');
+});
+
+test('one participant asking to cancel keeps the exchange going', function () {
+    $offer = PostOffer::factory()->accepted()->create();
+
+    $this->actingAs($offer->post->user)
+        ->patch(route('posts.progress.cancel', $offer))
+        ->assertRedirect();
+
+    expect($offer->fresh()->status)->toBe(PostOfferStatus::ACCEPTED);
+    expect($offer->post->fresh()->status)->toBe(PostStatus::IN_PROGRESS);
+});
+
+test('the exchange is cancelled once both participants agree and the post reopens with its other offers', function () {
+    $accepted = PostOffer::factory()->accepted()->create();
+    $waiting = PostOffer::factory()->for($accepted->post)->create();
+    $accepted->cancelOffers()->create(['user_id' => $accepted->user_id]);
+
+    $this->actingAs($accepted->post->user)
+        ->patch(route('posts.progress.cancel', $accepted))
+        ->assertRedirect(route('posts.offers'));
+
+    expect($accepted->fresh()->status)->toBe(PostOfferStatus::REJECTED);
+    expect($accepted->post->fresh()->status)->toBe(PostStatus::AVAILABLE);
+    expect($waiting->fresh()->status)->toBe(PostOfferStatus::PENDING);
+
+    $this->patch(route('post.offers.accept', $waiting))->assertRedirect();
+
+    expect($waiting->fresh()->status)->toBe(PostOfferStatus::ACCEPTED);
+});
+
+test('a participant cannot agree to cancel twice', function () {
+    $offer = PostOffer::factory()->accepted()->create();
+    $offer->cancelOffers()->create(['user_id' => $offer->user_id]);
+
+    $this->actingAs($offer->user)
+        ->patch(route('posts.progress.cancel', $offer))
+        ->assertForbidden();
+
+    expect($offer->fresh()->status)->toBe(PostOfferStatus::ACCEPTED);
+});
+
+test('strangers cannot cancel an exchange', function () {
+    $offer = PostOffer::factory()->accepted()->create();
+
+    $this->actingAs(User::factory()->create())
+        ->patch(route('posts.progress.cancel', $offer))
+        ->assertForbidden();
+
+    expect($offer->cancelOffers()->exists())->toBeFalse();
+});
+
+test('the exchange page shows who is waiting on the cancel request', function () {
+    $offer = PostOffer::factory()->accepted()->create();
+    $offer->cancelOffers()->create(['user_id' => $offer->user_id]);
+
+    $this->actingAs($offer->user)
+        ->get(route('posts.progress.show', $offer))
+        ->assertSee('to agree to cancel');
+
+    $this->actingAs($offer->post->user)
+        ->get(route('posts.progress.show', $offer))
+        ->assertSee('wants to cancel this exchange');
+});
+
+test('the post owner can accept another offer while the post is in progress', function () {
+    $first = PostOffer::factory()->accepted()->create();
+    $second = PostOffer::factory()->for($first->post)->create();
+
+    $this->actingAs($first->post->user)
+        ->patch(route('post.offers.accept', $second))
+        ->assertRedirect();
+
+    expect($first->fresh()->status)->toBe(PostOfferStatus::ACCEPTED);
+    expect($second->fresh()->status)->toBe(PostOfferStatus::ACCEPTED);
+});
+
+test('offers cannot be accepted once the post is completed', function () {
+    $offer = PostOffer::factory()->for(Post::factory()->state(['status' => PostStatus::COMPLETED]))->create();
+
+    $this->actingAs($offer->post->user)
+        ->patch(route('post.offers.accept', $offer))
+        ->assertForbidden();
+
+    expect($offer->fresh()->status)->toBe(PostOfferStatus::PENDING);
+});
+
+test('completing one exchange closes the other exchanges and offers on the post', function () {
+    $chosen = PostOffer::factory()->accepted()->create();
+    $otherExchange = PostOffer::factory()->for($chosen->post)->create(['status' => PostOfferStatus::ACCEPTED]);
+    $waiting = PostOffer::factory()->for($chosen->post)->create();
+    $chosen->completeOffers()->create(['user_id' => $chosen->user_id]);
+
+    $this->actingAs($chosen->post->user)
+        ->patch(route('posts.progress.complete', $chosen))
+        ->assertRedirect();
+
+    expect($chosen->post->fresh()->status)->toBe(PostStatus::COMPLETED);
+    expect($chosen->fresh()->status)->toBe(PostOfferStatus::ACCEPTED);
+    expect($otherExchange->fresh()->status)->toBe(PostOfferStatus::REJECTED);
+    expect($waiting->fresh()->status)->toBe(PostOfferStatus::REJECTED);
+});
+
+test('cancelling one of several exchanges keeps the post in progress', function () {
+    $cancelled = PostOffer::factory()->accepted()->create();
+    $stillRunning = PostOffer::factory()->for($cancelled->post)->create(['status' => PostOfferStatus::ACCEPTED]);
+    $cancelled->cancelOffers()->create(['user_id' => $cancelled->user_id]);
+
+    $this->actingAs($cancelled->post->user)
+        ->patch(route('posts.progress.cancel', $cancelled))
+        ->assertRedirect();
+
+    expect($cancelled->fresh()->status)->toBe(PostOfferStatus::REJECTED);
+    expect($stillRunning->fresh()->status)->toBe(PostOfferStatus::ACCEPTED);
+    expect($cancelled->post->fresh()->status)->toBe(PostStatus::IN_PROGRESS);
 });

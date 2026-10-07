@@ -40,9 +40,11 @@ class PostOfferController extends Controller
 
     public function accept(PostOffer $offer): RedirectResponse
     {
-        Gate::authorize('accept', $offer);
-
         DB::transaction(function () use ($offer) {
+            $offer = $offer->lockWithPost();
+
+            Gate::authorize('accept', $offer);
+
             $offer->status = PostOfferStatus::ACCEPTED;
             $offer->post->status = PostStatus::IN_PROGRESS;
             $offer->save();
