@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -17,8 +16,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['post_offer_id', 'reviewer_id', 'reviewee_id', 'review'])]
 class Review extends Model
 {
-    use HasFactory;
-
     /**
      * The offer this review was left about.
      *

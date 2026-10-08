@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\PostStatus;
+use Database\Factories\PostFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -21,6 +22,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable(['user_id', 'category_id', 'offering_skill', 'looking_skill', 'description', 'status'])]
 class Post extends Model
 {
+    /** @use HasFactory<PostFactory> */
     use HasFactory;
 
     public function casts(): array

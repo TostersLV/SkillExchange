@@ -98,7 +98,7 @@
     </div>
 
     {{-- Live activity, styled like a market ticker. The items are rendered twice so the loop is seamless. --}}
-    @if ($activity->isNotEmpty())
+    @if ($activity !== [])
         <div class="border-y border-line bg-surface" aria-label="Recent activity" role="region">
             <div class="mx-auto flex h-12 w-full max-w-[1200px] items-center gap-4 px-4 sm:px-6 lg:px-8">
                 <span class="flex shrink-0 items-center gap-2 text-xs font-extrabold tracking-[0.1em] text-swap-text uppercase">

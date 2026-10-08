@@ -9,7 +9,6 @@ use App\PostStatus;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 
@@ -47,9 +46,9 @@ class PostController extends Controller
     /**
      * Recent things that happened on the platform, for the live activity strip.
      *
-     * @return Collection<int, array{lead: string, text: string, time: string|null}>
+     * @return list<array{lead: string, text: string, time: string|null}>
      */
-    private function recentActivity(): Collection
+    private function recentActivity(): array
     {
         $completedSwaps = Post::query()
             ->with('user')
@@ -57,42 +56,57 @@ class PostController extends Controller
             ->latest('updated_at')
             ->limit(3)
             ->get()
-            ->map(fn (Post $post) => [
-                'lead' => $post->user->username,
-                'text' => "swapped {$post->offering_skill} → {$post->looking_skill}",
-                'time' => $post->updated_at->diffForHumans(),
-            ]);
+            ->map(fn (Post $post) => $this->activityItem(
+                $post->user->username,
+                "swapped {$post->offering_skill} → {$post->looking_skill}",
+                $post->updated_at->diffForHumans(),
+            ));
 
         $newPosts = Post::query()
             ->where('status', PostStatus::AVAILABLE)
             ->latest()
             ->limit(3)
             ->get()
-            ->map(fn (Post $post) => [
-                'lead' => 'New:',
-                'text' => "{$post->offering_skill} ⇄ {$post->looking_skill}",
-                'time' => $post->created_at->diffForHumans(),
-            ]);
+            ->map(fn (Post $post) => $this->activityItem(
+                'New:',
+                "{$post->offering_skill} ⇄ {$post->looking_skill}",
+                $post->created_at->diffForHumans(),
+            ));
 
         $completedThisWeek = Post::query()
             ->where('status', PostStatus::COMPLETED)
             ->where('updated_at', '>=', now()->subWeek())
             ->count();
 
-        $activity = collect(range(0, 2))
-            ->flatMap(fn (int $index) => [$newPosts->get($index), $completedSwaps->get($index)])
-            ->filter()
-            ->values();
+        // Alternate new posts and completed swaps, then close with the weekly total.
+        $activity = [];
+
+        foreach (range(0, 2) as $index) {
+            foreach ([$newPosts->get($index), $completedSwaps->get($index)] as $item) {
+                if ($item !== null) {
+                    $activity[] = $item;
+                }
+            }
+        }
 
         if ($completedThisWeek > 0) {
-            $activity->push([
-                'lead' => (string) $completedThisWeek,
-                'text' => str('exchange')->plural($completedThisWeek).' completed this week',
-                'time' => null,
-            ]);
+            $activity[] = $this->activityItem(
+                (string) $completedThisWeek,
+                str('exchange')->plural($completedThisWeek).' completed this week',
+            );
         }
 
         return $activity;
+    }
+
+    /**
+     * One entry of the live activity strip.
+     *
+     * @return array{lead: string, text: string, time: string|null}
+     */
+    private function activityItem(string $lead, string $text, ?string $time = null): array
+    {
+        return ['lead' => $lead, 'text' => $text, 'time' => $time];
     }
 
     public function show(Post $post): View|RedirectResponse

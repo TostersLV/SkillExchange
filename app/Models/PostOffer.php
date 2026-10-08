@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\PostOfferStatus;
 use App\PostStatus;
+use Database\Factories\PostOfferFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -21,6 +22,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable(['post_id', 'user_id', 'message', 'status'])]
 class PostOffer extends Model
 {
+    /** @use HasFactory<PostOfferFactory> */
     use HasFactory;
 
     /**
