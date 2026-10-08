@@ -24,7 +24,8 @@ class PostOfferController extends Controller
     {
         Gate::authorize('cancel', $offer);
 
-        $offer->delete();
+        $offer->status = PostOfferStatus::WITHDRAWN;
+        $offer->save();
 
         return back();
     }
@@ -33,7 +34,21 @@ class PostOfferController extends Controller
     {
         Gate::authorize('reject', $offer);
 
-        $offer->delete();
+        $offer->status = PostOfferStatus::REJECTED;
+        $offer->save();
+
+        return back();
+    }
+
+    /**
+     * Hide a declined or cancelled offer from the sender's requests list. The record itself is kept.
+     */
+    public function dismiss(PostOffer $offer): RedirectResponse
+    {
+        Gate::authorize('dismiss', $offer);
+
+        $offer->dismissed_at = now();
+        $offer->save();
 
         return back();
     }

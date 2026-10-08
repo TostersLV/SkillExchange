@@ -29,8 +29,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('posts/{post}/edit', [PostController::class, 'edit'])->name('posts.edit');
     Route::put('posts/{post}', [PostController::class, 'update'])->name('posts.update');
     Route::delete('posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
+    Route::patch('posts/{post}/close', [PostController::class, 'close'])->name('posts.close');
     Route::delete('offers/{offer}', [PostOfferController::class, 'destroy'])->name('posts.offers.cancel');
     Route::delete('offers/{offer}/reject', [PostOfferController::class, 'reject'])->name('posts.offers.reject');
+    Route::patch('requests/{offer}/dismiss', [PostOfferController::class, 'dismiss'])->name('posts.requests.dismiss');
 });
 
 require __DIR__.'/settings.php';

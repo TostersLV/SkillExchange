@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('cancel_offers', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('post_offer_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('post_offer_id')->constrained()->restrictOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->timestamps();
             $table->unique(['post_offer_id', 'user_id']);

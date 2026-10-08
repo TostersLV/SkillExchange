@@ -5,11 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Post;
 use App\Models\PostOffer;
+use App\PostOfferStatus;
 use App\PostStatus;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 class PostController extends Controller
@@ -184,5 +186,24 @@ class PostController extends Controller
         $post->delete();
 
         return redirect()->route('home');
+    }
+
+    /**
+     * Take a post with offer history off the market without deleting it. Waiting offers are declined.
+     */
+    public function close(Post $post): RedirectResponse
+    {
+        DB::transaction(function () use ($post) {
+            $post = Post::query()->lockForUpdate()->findOrFail($post->id);
+
+            Gate::authorize('close', $post);
+
+            $post->offers()->where('status', PostOfferStatus::PENDING)->update(['status' => PostOfferStatus::REJECTED]);
+
+            $post->status = PostStatus::CANCELLED;
+            $post->save();
+        });
+
+        return redirect()->route('posts.show', $post);
     }
 }

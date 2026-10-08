@@ -1,10 +1,14 @@
 <?php
 
 use App\Models\Category;
+use App\Models\Message;
 use App\Models\Post;
 use App\Models\PostOffer;
 use App\Models\User;
+use App\PostOfferStatus;
 use App\PostStatus;
+use Illuminate\Database\QueryException;
+use Livewire\Livewire;
 
 test('the owner can delete their post', function () {
     $post = Post::factory()->create();
@@ -191,4 +195,83 @@ test('members can open the post an exchange page', function () {
         ->assertOk()
         ->assertSee('You offer')
         ->assertSee('You want in return');
+});
+
+test('the owner cannot delete a post that ever received an offer', function (PostOfferStatus $status) {
+    $offer = PostOffer::factory()->create(['status' => $status]);
+
+    $this->actingAs($offer->post->user)
+        ->delete(route('posts.destroy', $offer->post))
+        ->assertForbidden();
+
+    $this->assertModelExists($offer->post);
+})->with([PostOfferStatus::PENDING, PostOfferStatus::REJECTED, PostOfferStatus::WITHDRAWN, PostOfferStatus::CANCELLED]);
+
+test('a post with offers offers close instead of delete', function () {
+    $post = PostOffer::factory()->create()->post;
+
+    $this->actingAs($post->user)
+        ->get(route('posts.show', $post))
+        ->assertSee('Close post')
+        ->assertDontSee('action="'.route('posts.destroy', $post).'"', false);
+});
+
+test('closing a post declines waiting offers and keeps all history', function () {
+    $cancelledExchange = PostOffer::factory()->create(['status' => PostOfferStatus::CANCELLED]);
+    $post = $cancelledExchange->post;
+    $message = Message::factory()->for($cancelledExchange, 'postOffer')->create();
+    $waiting = PostOffer::factory()->for($post)->create();
+
+    $this->actingAs($post->user)
+        ->patch(route('posts.close', $post))
+        ->assertRedirect(route('posts.show', $post));
+
+    expect($post->fresh()->status)->toBe(PostStatus::CANCELLED);
+    expect($waiting->fresh()->status)->toBe(PostOfferStatus::REJECTED);
+    expect($cancelledExchange->fresh()->status)->toBe(PostOfferStatus::CANCELLED);
+    $this->assertModelExists($message);
+});
+
+test('only the owner can close a post, and only one that has offers', function () {
+    $postWithOffer = PostOffer::factory()->create()->post;
+    $postWithoutOffers = Post::factory()->create();
+
+    $this->actingAs(User::factory()->create())
+        ->patch(route('posts.close', $postWithOffer))
+        ->assertForbidden();
+
+    $this->actingAs($postWithoutOffers->user)
+        ->patch(route('posts.close', $postWithoutOffers))
+        ->assertForbidden();
+
+    expect($postWithOffer->fresh()->status)->toBe(PostStatus::AVAILABLE);
+});
+
+test('a closed post disappears from explore', function () {
+    $closed = Post::factory()->create(['status' => PostStatus::CANCELLED, 'offering_skill' => 'Closed chess']);
+    $open = Post::factory()->create(['offering_skill' => 'Open piano']);
+
+    $this->actingAs(User::factory()->create());
+
+    Livewire::test('posts.search-and-filter')
+        ->assertSee($open->offering_skill)
+        ->assertDontSee($closed->offering_skill);
+});
+
+test('the sender is told when the author closed the post', function () {
+    $offer = PostOffer::factory()->create();
+
+    $this->actingAs($offer->post->user)->patch(route('posts.close', $offer->post));
+
+    $this->actingAs($offer->user)
+        ->get(route('posts.requests'))
+        ->assertSee($offer->post->user->username.' closed this post.');
+});
+
+test('the database refuses to delete a post that has offers', function () {
+    $offer = PostOffer::factory()->create();
+
+    expect(fn () => $offer->post->delete())->toThrow(QueryException::class);
+
+    $this->assertModelExists($offer);
 });

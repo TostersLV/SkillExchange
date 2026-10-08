@@ -16,6 +16,18 @@
                     </x-swap.button>
                 @endcan
 
+                @can('close', $post)
+                    <form method="POST" action="{{ route('posts.close', $post) }}"
+                        onsubmit="return confirm('Close this post? It stops taking offers and waiting offers are declined. Past exchanges and chats are kept.')">
+                        @csrf
+                        @method('PATCH')
+                        <x-swap.button type="submit" variant="danger" size="sm">
+                            <flux:icon.lock-closed variant="micro" />
+                            Close post
+                        </x-swap.button>
+                    </form>
+                @endcan
+
                 @can('delete', $post)
                     <form method="POST" action="{{ route('posts.destroy', $post) }}"
                         onsubmit="return confirm('Delete this post? This cannot be undone.')">

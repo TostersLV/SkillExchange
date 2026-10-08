@@ -46,6 +46,12 @@ class PostOfferPolicy
         return $user->id === $offer->user_id && $offer->status === PostOfferStatus::PENDING;
     }
 
+    // The sender can hide a declined or cancelled offer from their requests list
+    public function dismiss(User $user, PostOffer $offer): bool
+    {
+        return $user->id === $offer->user_id && $offer->status->isClosed() && $offer->dismissed_at === null;
+    }
+
     // The author can rejected an offer
     public function reject(User $user, PostOffer $offer): bool
     {

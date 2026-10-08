@@ -1,4 +1,4 @@
-@props(['posts', 'matches' => collect(), 'filtered' => false, 'emptyTitle' => null, 'emptyText' => null, 'showEmptyAction' => true])
+@props(['posts', 'matches' => collect(), 'closedOffers' => collect(), 'filtered' => false, 'emptyTitle' => null, 'emptyText' => null, 'showEmptyAction' => true])
 
 @if ($posts->isEmpty())
     <x-swap.empty :icon="$filtered ? 'magnifying-glass' : 'squares-plus'"
@@ -26,6 +26,8 @@
         @foreach ($posts as $post)
             @php
                 $isAvailable = $post->status === \App\PostStatus::AVAILABLE;
+                // The viewer's latest offer here was declined or cancelled: tell them, and let them propose again.
+                $myClosedStatus = $isAvailable ? $closedOffers->get($post->id) : null;
                 $isMatch = $matches->contains($post->id);
                 $isOwn = $post->user_id === auth()->id();
             @endphp
@@ -61,7 +63,7 @@
                                 <x-swap.category-icon :name="$post->category->name" class="opacity-80" />
                                 {{ str($post->category->name)->limit(24) }}
                             </x-swap.badge>
-                            <x-swap.status :status="$post->status" />
+                            <x-swap.status :status="$myClosedStatus ?? $post->status" />
                         </div>
                         <p class="text-xs text-muted">Posted {{ $post->created_at->diffForHumans() }}</p>
                     </div>
@@ -71,7 +73,7 @@
                     @elseif ($isOwn)
                         <span class="inline-flex h-10 shrink-0 items-center rounded-xl border border-line px-4 text-sm font-semibold text-strong transition-colors group-hover:bg-raised">Your post</span>
                     @else
-                        <span class="inline-flex h-10 shrink-0 items-center rounded-xl bg-swap-strong px-4 text-sm font-bold text-white transition-colors group-hover:bg-[#065f46]">Propose swap</span>
+                        <span class="inline-flex h-10 shrink-0 items-center rounded-xl bg-swap-strong px-4 text-sm font-bold text-white transition-colors group-hover:bg-[#065f46]">{{ $myClosedStatus ? 'Propose again' : 'Propose swap' }}</span>
                     @endif
                 </div>
             </a>

@@ -66,6 +66,7 @@ new class extends Component {
     {
         $posts = Post::query()
             ->with(['user', 'category'])
+            ->where('status', '!=', PostStatus::CANCELLED)
             ->when($this->search !== '', function ($query) {
                 $query->where(function ($query) {
                     $query
@@ -95,6 +96,7 @@ new class extends Component {
         return [
             'posts' => $posts,
             'matches' => $matches,
+            'closedOffers' => auth()->user()->closedOfferStatusesByPost(),
             'categories' => Category::orderBy('name')->get(),
             'isFiltered' => $this->search !== '' || $this->teach !== '' || $this->categoryId !== '' || $this->onlyAvailable,
         ];
@@ -185,5 +187,5 @@ new class extends Component {
         </div>
     </div>
 
-    <x-posts.results :posts="$posts" :matches="$matches" :filtered="$isFiltered" />
+    <x-posts.results :posts="$posts" :matches="$matches" :closed-offers="$closedOffers" :filtered="$isFiltered" />
 </div>

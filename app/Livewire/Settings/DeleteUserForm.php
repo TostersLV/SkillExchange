@@ -14,7 +14,7 @@ class DeleteUserForm extends Component
     public string $password = '';
 
     /**
-     * Delete the currently authenticated user.
+     * Delete the currently authenticated user's account, keeping the history other members share with them.
      */
     public function deleteUser(Logout $logout): void
     {
@@ -22,7 +22,16 @@ class DeleteUserForm extends Component
             'password' => $this->currentPasswordRules(),
         ]);
 
-        tap(Auth::user(), $logout(...))->delete();
+        $user = Auth::user();
+
+        if ($user->hasActiveExchanges()) {
+            $this->addError('password', __('Finish or cancel your exchanges in progress before deleting your account.'));
+
+            return;
+        }
+
+        $logout();
+        $user->deactivate();
 
         $this->redirect('/', navigate: true);
     }

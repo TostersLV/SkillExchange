@@ -13,6 +13,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
@@ -79,6 +81,64 @@ class User extends Authenticatable
         return PostOffer::query()
             ->where('status', PostOfferStatus::ACCEPTED)
             ->where(fn (Builder $query) => $query->where('user_id', $this->id)->orWhereRelation('post', 'user_id', $this->id));
+    }
+
+    /**
+     * Whether the user is in the middle of an exchange that someone else depends on.
+     */
+    public function hasActiveExchanges(): bool
+    {
+        return $this->exchanges()->whereRelation('post', 'status', PostStatus::IN_PROGRESS)->exists();
+    }
+
+    /**
+     * Close the account without erasing anyone else's history: open offers and posts are withdrawn, personal
+     * data is cleared, and the row is kept so past exchanges, chats and reviews stay intact for the other members.
+     */
+    public function deactivate(): void
+    {
+        DB::transaction(function () {
+            PostOffer::query()
+                ->where('status', PostOfferStatus::PENDING)
+                ->where('user_id', $this->id)
+                ->update(['status' => PostOfferStatus::WITHDRAWN]);
+
+            PostOffer::query()
+                ->where('status', PostOfferStatus::PENDING)
+                ->whereRelation('post', 'user_id', $this->id)
+                ->update(['status' => PostOfferStatus::REJECTED]);
+
+            $this->posts()->where('status', PostStatus::AVAILABLE)->doesntHave('offers')->delete();
+            $this->posts()->where('status', PostStatus::AVAILABLE)->update(['status' => PostStatus::CANCELLED]);
+
+            $this->forceFill([
+                'username' => 'Deleted user',
+                'bio' => null,
+                'email' => "deleted-{$this->id}@skillexchange.invalid",
+                'email_verified_at' => null,
+                'password' => Str::random(64),
+                'profile_picture' => null,
+                'remember_token' => null,
+            ])->save();
+
+            DB::table('sessions')->where('user_id', $this->id)->delete();
+        });
+    }
+
+    /**
+     * The posts where this user's latest offer was declined or its exchange cancelled, with how it ended.
+     *
+     * @return Collection<int, PostOfferStatus> keyed by post id
+     */
+    public function closedOfferStatusesByPost(): Collection
+    {
+        return PostOffer::query()
+            ->where('user_id', $this->id)
+            ->oldest('updated_at')
+            ->oldest('id')
+            ->get(['post_id', 'status'])
+            ->mapWithKeys(fn (PostOffer $offer) => [$offer->post_id => $offer->status])
+            ->filter(fn (PostOfferStatus $status) => $status->isClosed());
     }
 
     public function completedExchangesCount(): int

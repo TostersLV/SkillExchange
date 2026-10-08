@@ -23,9 +23,19 @@ class PostPolicy
             && $post->offers()->where('status', PostOfferStatus::PENDING)->doesntExist();
     }
 
-    // Only author can delete their post, and only until an offer is accepted so the exchange history is kept
+    // Only author can delete their post, and only if nobody ever sent an offer on it, so no shared history is lost
     public function delete(User $user, Post $post): bool
     {
-        return $user->id === $post->user_id && $post->status === PostStatus::AVAILABLE;
+        return $user->id === $post->user_id
+            && $post->status === PostStatus::AVAILABLE
+            && $post->offers()->doesntExist();
+    }
+
+    // A post that has offers can't be deleted, but its author can close it so it stops taking offers
+    public function close(User $user, Post $post): bool
+    {
+        return $user->id === $post->user_id
+            && $post->status === PostStatus::AVAILABLE
+            && $post->offers()->exists();
     }
 }

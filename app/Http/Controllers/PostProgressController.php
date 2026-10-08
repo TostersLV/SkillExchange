@@ -52,10 +52,8 @@ class PostProgressController extends Controller
                 $offer->post->save();
 
                 // The author picked this partner, so close every other exchange and offer on the post
-                $offer->post->offers()
-                    ->whereKeyNot($offer->id)
-                    ->whereIn('status', [PostOfferStatus::PENDING, PostOfferStatus::ACCEPTED])
-                    ->update(['status' => PostOfferStatus::REJECTED]);
+                $offer->post->offers()->whereKeyNot($offer->id)->where('status', PostOfferStatus::ACCEPTED)->update(['status' => PostOfferStatus::CANCELLED]);
+                $offer->post->offers()->whereKeyNot($offer->id)->where('status', PostOfferStatus::PENDING)->update(['status' => PostOfferStatus::REJECTED]);
             }
         });
 
@@ -81,7 +79,7 @@ class PostProgressController extends Controller
                 return false;
             }
 
-            $offer->status = PostOfferStatus::REJECTED;
+            $offer->status = PostOfferStatus::CANCELLED;
             $offer->save();
 
             if ($offer->post->offers()->where('status', PostOfferStatus::ACCEPTED)->doesntExist()) {

@@ -9,7 +9,7 @@
         \App\PostStatus::CANCELLED => ['x-mark', 'neutral'],
         \App\PostOfferStatus::PENDING => ['clock', 'amber'],
         \App\PostOfferStatus::ACCEPTED => ['check', 'strong'],
-        \App\PostOfferStatus::REJECTED => ['x-mark', 'neutral'],
+        \App\PostOfferStatus::REJECTED, \App\PostOfferStatus::CANCELLED, \App\PostOfferStatus::WITHDRAWN => ['x-mark', 'neutral'],
         default => [null, 'neutral'],
     };
 @endphp

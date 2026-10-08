@@ -13,10 +13,12 @@ return new class extends Migration
     {
         Schema::create('post_offers', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('post_id')->constrained()->cascadeOnDelete();
+            // Restrict, not cascade: an offer is shared history, so a post that has offers can't be deleted
+            $table->foreignId('post_id')->constrained()->restrictOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->text('message')->nullable();
             $table->string('status');
+            $table->timestamp('dismissed_at')->nullable();
             $table->timestamps();
         });
     }

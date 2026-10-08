@@ -44,6 +44,14 @@ new class extends Component {
         return $this->post->offers()->where('user_id', Auth::id())->where('status', PostOfferStatus::PENDING)->exists();
     }
 
+    /**
+     * How this user's latest offer on the post ended, when it was declined or cancelled.
+     */
+    public function closedOfferStatus(): ?PostOfferStatus
+    {
+        return Auth::user()->closedOfferStatusesByPost()->get($this->post->id);
+    }
+
     public function isAvailable(): bool
     {
         return $this->post->status === PostStatus::AVAILABLE;
@@ -59,10 +67,20 @@ new class extends Component {
     @elseif (! $this->isAvailable())
         <x-swap.badge icon="lock-closed">No longer available</x-swap.badge>
     @else
-        <x-swap.button variant="swap" wire:click="$set('showModal', true)">
-            <x-swap.icon class="size-4" />
-            Propose swap
-        </x-swap.button>
+        @php($closedStatus = $this->closedOfferStatus())
+
+        <div class="flex flex-wrap items-center gap-2">
+            @if ($closedStatus === PostOfferStatus::REJECTED)
+                <x-swap.badge icon="x-mark">Your offer was declined</x-swap.badge>
+            @elseif ($closedStatus === PostOfferStatus::CANCELLED)
+                <x-swap.badge icon="x-mark">Your exchange was cancelled</x-swap.badge>
+            @endif
+
+            <x-swap.button variant="swap" wire:click="$set('showModal', true)">
+                <x-swap.icon class="size-4" />
+                {{ $closedStatus ? 'Propose again' : 'Propose swap' }}
+            </x-swap.button>
+        </div>
 
         <flux:modal wire:model.self="showModal" class="md:w-[28rem]">
             <form wire:submit="sendOffer" class="space-y-5">

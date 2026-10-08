@@ -71,7 +71,7 @@
             @endif
         </div>
 
-        <x-posts.results :posts="$posts"
+        <x-posts.results :posts="$posts" :closed-offers="$closedOffers"
             :empty-title="$isMe ? 'You have not posted yet' : 'No open exchanges'"
             :empty-text="$isMe ? 'Post an exchange to start trading with the community.' : $user->username.' has no open exchanges right now.'"
             :show-empty-action="$isMe" />

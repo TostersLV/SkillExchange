@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\PostOfferStatus;
 use App\PostStatus;
+use Carbon\CarbonImmutable;
 use Database\Factories\PostOfferFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -18,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $user_id
  * @property string|null $message
  * @property PostOfferStatus $status
+ * @property CarbonImmutable|null $dismissed_at
  */
 #[Fillable(['post_id', 'user_id', 'message', 'status'])]
 class PostOffer extends Model
@@ -32,6 +34,7 @@ class PostOffer extends Model
     {
         return [
             'status' => PostOfferStatus::class,
+            'dismissed_at' => 'datetime',
         ];
     }
 

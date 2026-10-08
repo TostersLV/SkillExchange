@@ -5,6 +5,7 @@ use App\Models\PostOffer;
 use App\Models\User;
 use App\PostOfferStatus;
 use App\PostStatus;
+use Livewire\Livewire;
 
 test('the post owner can accept an offer and the post becomes in progress', function () {
     $offer = PostOffer::factory()->create();
@@ -27,20 +28,22 @@ test('other users cannot accept an offer', function () {
     expect($offer->post->fresh()->status)->toBe(PostStatus::AVAILABLE);
 });
 
-test('the post owner can reject an offer', function () {
+test('declining an offer keeps it as declined', function () {
     $offer = PostOffer::factory()->create();
 
     $this->actingAs($offer->post->user)->delete(route('posts.offers.reject', $offer));
 
-    $this->assertModelMissing($offer);
+    expect($offer->fresh()->status)->toBe(PostOfferStatus::REJECTED);
 });
 
-test('the sender can cancel their pending offer', function () {
+test('the sender can withdraw their pending offer and it leaves their requests', function () {
     $offer = PostOffer::factory()->create();
 
     $this->actingAs($offer->user)->delete(route('posts.offers.cancel', $offer));
 
-    $this->assertModelMissing($offer);
+    expect($offer->fresh()->status)->toBe(PostOfferStatus::WITHDRAWN);
+
+    $this->get(route('posts.requests'))->assertDontSee($offer->post->offering_skill);
 });
 
 test('the post completes only after both users confirm', function () {
@@ -168,7 +171,7 @@ test('the exchange is cancelled once both participants agree and the post reopen
         ->patch(route('posts.progress.cancel', $accepted))
         ->assertRedirect(route('posts.offers'));
 
-    expect($accepted->fresh()->status)->toBe(PostOfferStatus::REJECTED);
+    expect($accepted->fresh()->status)->toBe(PostOfferStatus::CANCELLED);
     expect($accepted->post->fresh()->status)->toBe(PostStatus::AVAILABLE);
     expect($waiting->fresh()->status)->toBe(PostOfferStatus::PENDING);
 
@@ -245,7 +248,7 @@ test('completing one exchange closes the other exchanges and offers on the post'
 
     expect($chosen->post->fresh()->status)->toBe(PostStatus::COMPLETED);
     expect($chosen->fresh()->status)->toBe(PostOfferStatus::ACCEPTED);
-    expect($otherExchange->fresh()->status)->toBe(PostOfferStatus::REJECTED);
+    expect($otherExchange->fresh()->status)->toBe(PostOfferStatus::CANCELLED);
     expect($waiting->fresh()->status)->toBe(PostOfferStatus::REJECTED);
 });
 
@@ -258,7 +261,86 @@ test('cancelling one of several exchanges keeps the post in progress', function 
         ->patch(route('posts.progress.cancel', $cancelled))
         ->assertRedirect();
 
-    expect($cancelled->fresh()->status)->toBe(PostOfferStatus::REJECTED);
+    expect($cancelled->fresh()->status)->toBe(PostOfferStatus::CANCELLED);
     expect($stillRunning->fresh()->status)->toBe(PostOfferStatus::ACCEPTED);
     expect($cancelled->post->fresh()->status)->toBe(PostStatus::IN_PROGRESS);
+});
+
+test('the requests page explains why an offer ended', function () {
+    $sender = User::factory()->create();
+    $declined = PostOffer::factory()->for($sender)->create(['status' => PostOfferStatus::REJECTED]);
+    $calledOff = PostOffer::factory()->for($sender)->create(['status' => PostOfferStatus::CANCELLED]);
+    $calledOff->cancelOffers()->create(['user_id' => $sender->id]);
+    $calledOff->cancelOffers()->create(['user_id' => $calledOff->post->user_id]);
+    $lostOut = PostOffer::factory()->for($sender)
+        ->for(Post::factory()->state(['status' => PostStatus::COMPLETED]))
+        ->create(['status' => PostOfferStatus::CANCELLED]);
+
+    $this->actingAs($sender)
+        ->get(route('posts.requests'))
+        ->assertOk()
+        ->assertSee($declined->post->user->username.' declined your request.')
+        ->assertSee('This exchange was cancelled.')
+        ->assertSee($lostOut->post->user->username.' completed this swap with another member.');
+});
+
+test('the sender can dismiss an ended offer without deleting it', function () {
+    $offer = PostOffer::factory()->create(['status' => PostOfferStatus::REJECTED]);
+
+    $this->actingAs($offer->user)
+        ->patch(route('posts.requests.dismiss', $offer))
+        ->assertRedirect();
+
+    expect($offer->fresh()->dismissed_at)->not->toBeNull();
+
+    $this->get(route('posts.requests'))->assertDontSee('declined your request');
+});
+
+test('only the sender can dismiss, and only offers that ended', function () {
+    $declined = PostOffer::factory()->create(['status' => PostOfferStatus::REJECTED]);
+    $pending = PostOffer::factory()->for($declined->user)->create();
+
+    $this->actingAs($declined->post->user)
+        ->patch(route('posts.requests.dismiss', $declined))
+        ->assertForbidden();
+
+    $this->actingAs($pending->user)
+        ->patch(route('posts.requests.dismiss', $pending))
+        ->assertForbidden();
+
+    expect($declined->fresh()->dismissed_at)->toBeNull();
+});
+
+test('a declined user sees why on the post and can propose again', function (PostOfferStatus $status, string $badge) {
+    $offer = PostOffer::factory()->create(['status' => $status]);
+
+    $this->actingAs($offer->user)
+        ->get(route('posts.show', $offer->post))
+        ->assertOk()
+        ->assertSee($badge)
+        ->assertSee('Propose again');
+
+    Livewire::test('posts.send-offer', ['post' => $offer->post])
+        ->call('sendOffer')
+        ->assertSee('Offer sent');
+
+    expect($offer->post->offers()->where('status', PostOfferStatus::PENDING)->count())->toBe(1);
+    expect($offer->fresh()->status)->toBe($status);
+})->with([
+    'declined' => [PostOfferStatus::REJECTED, 'Your offer was declined'],
+    'cancelled' => [PostOfferStatus::CANCELLED, 'Your exchange was cancelled'],
+]);
+
+test('only the declined user sees the declined badge on explore', function () {
+    $offer = PostOffer::factory()->create(['status' => PostOfferStatus::REJECTED]);
+
+    $this->actingAs($offer->user);
+    Livewire::test('posts.search-and-filter')
+        ->assertSee('Declined')
+        ->assertSee('Propose again');
+
+    $this->actingAs(User::factory()->create());
+    Livewire::test('posts.search-and-filter')
+        ->assertDontSee('Declined')
+        ->assertSee('Propose swap');
 });
