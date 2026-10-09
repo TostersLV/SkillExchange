@@ -46,7 +46,7 @@ $otherUsername = $otherUser->username;
 
                                 <x-star-rating-input name="rating" />
 
-                                <x-swap.button type="submit" class="w-full">Submit review</x-swap.button>
+                                <x-swap.button type="submit" class="w-full" wire:loading.attr="disabled">Submit review</x-swap.button>
                             </form>
                         @endif
                     @elseif ($offer->hasBeenCompletedBy(auth()->user()))
@@ -56,7 +56,14 @@ $otherUsername = $otherUser->username;
                                 <span>Waiting for <a href="{{ route('profile.show', $otherUser) }}" wire:navigate class="font-medium text-strong underline decoration-line-strong underline-offset-2 transition-colors hover:decoration-brand">{{ $otherUsername }}</a> to confirm</span>
                             </p>
 
-                            <x-swap.button disabled class="w-full">Mark as complete</x-swap.button>
+                            <form method="POST" action="{{ route('posts.progress.complete.undo', $offer) }}">
+                                @csrf
+                                @method('DELETE')
+                                <x-swap.button type="submit" variant="secondary" class="w-full">
+                                    <flux:icon.arrow-uturn-left variant="micro" />
+                                    Undo mark as complete
+                                </x-swap.button>
+                            </form>
                         </div>
                     @else
                         <form method="POST" action="{{ route('posts.progress.complete', $offer) }}" class="space-y-3">
@@ -83,7 +90,14 @@ $otherUsername = $otherUser->username;
                                     <span>Waiting for <a href="{{ route('profile.show', $otherUser) }}" wire:navigate class="font-medium text-strong underline decoration-line-strong underline-offset-2 transition-colors hover:decoration-brand">{{ $otherUsername }}</a> to agree to cancel</span>
                                 </p>
 
-                                <x-swap.button variant="danger" disabled class="w-full">Cancel exchange</x-swap.button>
+                                <form method="POST" action="{{ route('posts.progress.cancel.withdraw', $offer) }}">
+                                    @csrf
+                                    @method('DELETE')
+                                    <x-swap.button type="submit" variant="secondary" class="w-full">
+                                        <flux:icon.arrow-uturn-left variant="micro" />
+                                        Withdraw cancel request
+                                    </x-swap.button>
+                                </form>
                             </div>
                         @else
                             <form method="POST" action="{{ route('posts.progress.cancel', $offer) }}" class="mt-3 space-y-3"

@@ -24,6 +24,14 @@ class PostOfferPolicy
             && ! $offer->hasBeenCompletedBy($user);
     }
 
+    // A participant can take back their "mark as complete" until the other one confirms too
+    public function undoComplete(User $user, PostOffer $offer): bool
+    {
+        return $this->view($user, $offer)
+            && $offer->post->status === PostStatus::IN_PROGRESS
+            && $offer->hasBeenCompletedBy($user);
+    }
+
     // Either participant can review the other once, after the exchange is complete
     public function review(User $user, PostOffer $offer): bool
     {
@@ -38,6 +46,14 @@ class PostOfferPolicy
         return $this->view($user, $offer)
             && $offer->post->status === PostStatus::IN_PROGRESS
             && ! $offer->hasRequestedCancelBy($user);
+    }
+
+    // A participant can withdraw their cancel request until the other one agrees too
+    public function withdrawCancel(User $user, PostOffer $offer): bool
+    {
+        return $this->view($user, $offer)
+            && $offer->post->status === PostStatus::IN_PROGRESS
+            && $offer->hasRequestedCancelBy($user);
     }
 
     // Only the user who sent an offer can cancel the post

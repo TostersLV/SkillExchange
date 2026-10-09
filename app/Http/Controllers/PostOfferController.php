@@ -15,7 +15,7 @@ class PostOfferController extends Controller
 {
     public function index(): View
     {
-        $offers = PostOffer::query()->with(['user', 'post'])->whereRelation('post', 'user_id', Auth::id())->where('status', PostOfferStatus::PENDING)->latest()->get();
+        $offers = PostOffer::query()->with(['user' => fn ($query) => $query->withAvg('reviewsReceived', 'review'), 'post'])->whereRelation('post', 'user_id', Auth::id())->where('status', PostOfferStatus::PENDING)->latest()->get();
 
         return view('postoffer.index', compact('offers'));
     }

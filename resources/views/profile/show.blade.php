@@ -11,12 +11,6 @@
                 <div class="min-w-0 space-y-2">
                     <div class="flex flex-wrap items-center gap-2">
                         <h1 class="truncate text-3xl font-extrabold tracking-[-0.03em] sm:text-4xl">{{ $user->username }}</h1>
-                        @if ($user->email_verified_at)
-                            <span class="inline-flex items-center gap-1.5 rounded-full bg-swap/15 px-2.5 py-1 text-xs font-bold text-emerald-300">
-                                <flux:icon.shield-check variant="micro" class="size-3.5" aria-hidden="true" />
-                                Verified member
-                            </span>
-                        @endif
                     </div>
 
                     @if ($user->bio)

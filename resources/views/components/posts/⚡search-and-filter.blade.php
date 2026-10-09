@@ -2,12 +2,16 @@
 
 use App\Models\Category;
 use App\Models\Post;
+use App\Models\Review;
 use App\PostStatus;
-use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 new class extends Component {
+    use WithPagination;
+
     /** What the visitor wants to learn: matched against what posts offer. */
     #[Url(as: 'q', except: '')]
     public string $search = '';
@@ -22,51 +26,74 @@ new class extends Component {
     #[Url(except: 'best')]
     public string $sort = 'best';
 
-    #[Url(as: 'available', except: false)]
-    public bool $onlyAvailable = false;
+    /**
+     * A new search or category starts again from the first page.
+     */
+    public function updated(string $property): void
+    {
+        if (in_array($property, ['search', 'teach', 'categoryId'], true)) {
+            $this->resetPage();
+        }
+    }
 
     public function clearFilters(): void
     {
-        $this->reset('search', 'teach', 'categoryId', 'onlyAvailable');
+        $this->reset('search', 'teach', 'categoryId');
+        $this->resetPage();
     }
 
     public function swapFields(): void
     {
         [$this->search, $this->teach] = [$this->teach, $this->search];
+        $this->resetPage();
     }
 
     public function sortBy(string $sort): void
     {
         $this->sort = in_array($sort, ['best', 'newest', 'rated'], true) ? $sort : 'best';
+        $this->resetPage();
     }
 
     /**
-     * A post is a great match when its author wants a skill the current user offers in one of their own posts.
+     * Adds an "is_match" column: 1 when the post's author wants a skill the current user offers in one of
+     * their own posts (either skill name containing the other), otherwise 0. It's worked out in SQL so
+     * "best match" sorts across all pages, not just the page being shown.
      *
-     * @param  Collection<int, Post>  $posts
-     * @return Collection<int, int>
+     * @param  Builder<Post>  $query
      */
-    private function matchingPostIds(Collection $posts): Collection
+    private function selectIsMatch(Builder $query): void
     {
         $user = auth()->user();
-        $mySkills = $user->posts()->pluck('offering_skill')->map(fn (string $skill) => mb_strtolower(trim($skill)))->unique();
-
-        return $posts
-            ->filter(fn (Post $post) => $post->user_id !== $user->id && $post->status === PostStatus::AVAILABLE)
-            ->filter(function (Post $post) use ($mySkills) {
-                $wanted = mb_strtolower($post->looking_skill);
-
-                return $mySkills->contains(fn (string $skill) => str_contains($wanted, $skill) || str_contains($skill, $wanted));
-            })
-            ->pluck('id')
+        $mySkills = $user->posts()->pluck('offering_skill')
+            ->map(fn (string $skill) => mb_strtolower(trim($skill)))
+            ->filter()
+            ->unique()
             ->values();
+
+        if ($mySkills->isEmpty()) {
+            $query->selectRaw('0 as is_match');
+
+            return;
+        }
+
+        // INSTR(text, part) > 0 means "text contains part", and it works on both MySQL and SQLite
+        $skillChecks = $mySkills
+            ->map(fn () => '(INSTR(LOWER(posts.looking_skill), ?) > 0 OR INSTR(?, LOWER(posts.looking_skill)) > 0)')
+            ->implode(' OR ');
+
+        $query->selectRaw(
+            "CASE WHEN posts.user_id <> ? AND ({$skillChecks}) THEN 1 ELSE 0 END as is_match",
+            [$user->id, ...$mySkills->flatMap(fn (string $skill) => [$skill, $skill])],
+        );
     }
 
     public function with(): array
     {
-        $posts = Post::query()
-            ->with(['user', 'category'])
-            ->where('status', '!=', PostStatus::CANCELLED)
+        $query = Post::query()
+            ->select('posts.*')
+            ->with(['user' => fn ($query) => $query->withAvg('reviewsReceived', 'review'), 'category'])
+            // Explore lists only exchanges that are still open to offers
+            ->where('posts.status', PostStatus::AVAILABLE)
             ->when($this->search !== '', function ($query) {
                 $query->where(function ($query) {
                     $query
@@ -75,30 +102,28 @@ new class extends Component {
                 });
             })
             ->when($this->teach !== '', fn ($query) => $query->where('looking_skill', 'like', '%' . $this->teach . '%'))
-            ->when($this->categoryId !== '', fn ($query) => $query->where('category_id', $this->categoryId))
-            ->when($this->onlyAvailable, fn ($query) => $query->where('status', PostStatus::AVAILABLE))
-            ->latest()
-            ->get();
+            ->when($this->categoryId !== '', fn ($query) => $query->where('category_id', $this->categoryId));
 
-        $matches = $this->matchingPostIds($posts);
+        $this->selectIsMatch($query);
 
-        // Open exchanges always come first; the chosen sort orders within them.
-        $posts = $posts->sortBy([
-            fn (Post $a, Post $b) => ($b->status === PostStatus::AVAILABLE) <=> ($a->status === PostStatus::AVAILABLE),
-            match ($this->sort) {
-                'rated' => fn (Post $a, Post $b) => (float) $b->user->reputation <=> (float) $a->user->reputation,
-                'newest' => fn (Post $a, Post $b) => 0,
-                default => fn (Post $a, Post $b) => $matches->contains($b->id) <=> $matches->contains($a->id),
-            },
-            fn (Post $a, Post $b) => $b->created_at <=> $a->created_at,
-        ])->values();
+        match ($this->sort) {
+            'rated' => $query->orderByDesc(
+                Review::query()->selectRaw('AVG(review)')->whereColumn('reviewee_id', 'posts.user_id')
+            ),
+            'newest' => null,
+            default => $query->orderByDesc('is_match'),
+        };
+
+        $posts = $query->latest()->paginate(15);
 
         return [
             'posts' => $posts,
-            'matches' => $matches,
+            'matches' => $posts->getCollection()
+                ->filter(fn (Post $post) => (int) $post->getAttribute('is_match') === 1)
+                ->pluck('id'),
             'closedOffers' => auth()->user()->closedOfferStatusesByPost(),
             'categories' => Category::orderBy('name')->get(),
-            'isFiltered' => $this->search !== '' || $this->teach !== '' || $this->categoryId !== '' || $this->onlyAvailable,
+            'isFiltered' => $this->search !== '' || $this->teach !== '' || $this->categoryId !== '',
         ];
     }
 };
@@ -146,7 +171,7 @@ new class extends Component {
     <div class="flex flex-wrap items-center justify-between gap-4 pt-3">
         <div class="flex flex-wrap items-center gap-4">
             <p class="text-sm text-muted" aria-live="polite">
-                <strong class="font-bold text-strong">{{ $posts->count() }}</strong> {{ str('exchange')->plural($posts->count()) }}
+                <strong class="font-bold text-strong">{{ $posts->total() }}</strong> {{ str('exchange')->plural($posts->total()) }}
             </p>
 
             <div class="flex gap-0.5 rounded-xl bg-raised p-1" role="group" aria-label="Sort by">
@@ -161,31 +186,31 @@ new class extends Component {
             </div>
         </div>
 
-        <div class="flex items-center gap-4">
-            @if ($isFiltered)
-                <x-swap.button wire:click="clearFilters" variant="ghost" size="sm">
-                    <flux:icon.x-mark variant="micro" />
-                    Clear
-                </x-swap.button>
-            @endif
-
-            <button type="button" role="switch" wire:click="$toggle('onlyAvailable')" aria-checked="{{ $onlyAvailable ? 'true' : 'false' }}"
-                class="flex min-h-11 items-center gap-2.5 text-sm font-semibold text-strong">
-                <span @class([
-                    'relative h-6 w-10 rounded-full transition-colors',
-                    'bg-swap-strong' => $onlyAvailable,
-                    'bg-line-strong' => ! $onlyAvailable,
-                ])>
-                    <span @class([
-                        'absolute top-[3px] size-[18px] rounded-full bg-white shadow transition-[left]',
-                        'left-[19px]' => $onlyAvailable,
-                        'left-[3px]' => ! $onlyAvailable,
-                    ])></span>
-                </span>
-                Only available
-            </button>
-        </div>
+        @if ($isFiltered)
+            <x-swap.button wire:click="clearFilters" variant="ghost" size="sm">
+                <flux:icon.x-mark variant="micro" />
+                Clear
+            </x-swap.button>
+        @endif
     </div>
 
     <x-posts.results :posts="$posts" :matches="$matches" :closed-offers="$closedOffers" :filtered="$isFiltered" />
+
+    @if ($posts->hasPages())
+        <nav class="flex items-center justify-between gap-3 pt-2" aria-label="Pagination">
+            <x-swap.button wire:click="previousPage" variant="secondary" size="sm" :disabled="$posts->onFirstPage()">
+                <flux:icon.arrow-left variant="micro" />
+                Previous
+            </x-swap.button>
+
+            <p class="text-sm text-muted">
+                Page <strong class="font-bold text-strong">{{ $posts->currentPage() }}</strong> of {{ $posts->lastPage() }}
+            </p>
+
+            <x-swap.button wire:click="nextPage" variant="secondary" size="sm" :disabled="! $posts->hasMorePages()">
+                Next
+                <flux:icon.arrow-right variant="micro" />
+            </x-swap.button>
+        </nav>
+    @endif
 </div>

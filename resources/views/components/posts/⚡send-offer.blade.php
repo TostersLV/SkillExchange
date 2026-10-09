@@ -5,6 +5,7 @@ use App\PostOfferStatus;
 use App\PostStatus;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 
@@ -19,17 +20,31 @@ new class extends Component {
     {
         $this->validate(['message' => 'nullable|string|max:500']);
 
-        if ($this->isOwner() || $this->hasOffered() || ! $this->isAvailable()) {
+        // Lock the post row, so requests for the same post run one after another instead of at the same time.
+        // The checks below then run on fresh data: a second click finds the first offer and stops.
+        $isSent = DB::transaction(function () {
+            $this->post = Post::query()->lockForUpdate()->findOrFail($this->post->id);
+
+            if ($this->isOwner() || $this->hasOffered() || ! $this->isAvailable()) {
+                return false;
+            }
+
+            $this->post->offers()->create([
+                'user_id' => Auth::id(),
+                'message' => $this->message !== '' ? $this->message : null,
+                'status' => PostOfferStatus::PENDING,
+            ]);
+
+            return true;
+        });
+
+        $this->reset('showModal');
+
+        if (! $isSent) {
             return;
         }
 
-        $this->post->offers()->create([
-            'user_id' => Auth::id(),
-            'message' => $this->message !== '' ? $this->message : null,
-            'status' => PostOfferStatus::PENDING,
-        ]);
-
-        $this->reset('message', 'showModal');
+        $this->reset('message');
 
         Flux::toast(text: 'Offer sent.', variant: 'success');
     }
@@ -98,7 +113,7 @@ new class extends Component {
                     <flux:modal.close>
                         <x-swap.button variant="ghost">Cancel</x-swap.button>
                     </flux:modal.close>
-                    <x-swap.button type="submit" variant="swap">Send proposal</x-swap.button>
+                    <x-swap.button type="submit" variant="swap" wire:loading.attr="disabled" wire:target="sendOffer">Send proposal</x-swap.button>
                 </div>
             </form>
         </flux:modal>

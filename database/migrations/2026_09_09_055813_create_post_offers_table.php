@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             // Restrict, not cascade: an offer is shared history, so a post that has offers can't be deleted
             $table->foreignId('post_id')->constrained()->restrictOnDelete();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained()->restrictOnDelete();
             $table->text('message')->nullable();
             $table->string('status');
             $table->timestamp('dismissed_at')->nullable();

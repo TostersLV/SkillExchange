@@ -25,6 +25,14 @@ test('authenticated users can visit the home page', function () {
     $response->assertOk();
 });
 
+test('members do not need to verify their email to use the app', function () {
+    $this->actingAs(User::factory()->unverified()->create());
+
+    $this->get(route('home'))->assertOk();
+    $this->get(route('posts.create'))->assertOk();
+    $this->get(route('profile.edit'))->assertOk();
+});
+
 test('the home page shows the user\'s pending offers and active exchanges', function () {
     $user = User::factory()->create();
     $myPost = Post::factory()->for($user)->create();

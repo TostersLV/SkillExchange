@@ -5,6 +5,7 @@ use App\Models\PostOffer;
 use App\Models\User;
 use App\PostOfferStatus;
 use App\PostStatus;
+use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 
 test('the post owner can accept an offer and the post becomes in progress', function () {
@@ -74,21 +75,37 @@ test('users cannot review before the exchange is completed', function () {
         ->assertForbidden();
 });
 
-test('a review updates the other user\'s reputation', function () {
-    $offer = PostOffer::factory()->accepted()->create();
-    $offer->post->update(['status' => PostStatus::COMPLETED]);
-    $author = $offer->post->user;
+test('a user\'s rating is the average of the reviews they received', function () {
+    $author = User::factory()->create();
+    $firstExchange = PostOffer::factory()->for(Post::factory()->for($author)->state(['status' => PostStatus::COMPLETED]))->create(['status' => PostOfferStatus::ACCEPTED]);
+    $secondExchange = PostOffer::factory()->for(Post::factory()->for($author)->state(['status' => PostStatus::COMPLETED]))->create(['status' => PostOfferStatus::ACCEPTED]);
 
-    $this->actingAs($offer->user)
-        ->patch(route('posts.progress.review', $offer), ['rating' => 4])
+    $this->actingAs($firstExchange->user)
+        ->patch(route('posts.progress.review', $firstExchange), ['rating' => 5])
         ->assertRedirect();
 
     $this->assertDatabaseHas('reviews', [
-        'reviewer_id' => $offer->user_id,
+        'reviewer_id' => $firstExchange->user_id,
         'reviewee_id' => $author->id,
-        'review' => 4,
+        'review' => 5,
     ]);
-    expect((float) $author->fresh()->reputation)->toBe(4.0);
+
+    $this->actingAs($secondExchange->user)
+        ->patch(route('posts.progress.review', $secondExchange), ['rating' => 2]);
+
+    expect($author->fresh()->reputation)->toBe(3.5);
+    expect(User::factory()->create()->reputation)->toBeNull();
+});
+
+test('reviewing the same exchange twice is refused and keeps one review', function () {
+    $offer = PostOffer::factory()->for(Post::factory()->state(['status' => PostStatus::COMPLETED]))->create(['status' => PostOfferStatus::ACCEPTED]);
+
+    $this->actingAs($offer->user)->patch(route('posts.progress.review', $offer), ['rating' => 5]);
+
+    $this->patch(route('posts.progress.review', $offer), ['rating' => 1])->assertForbidden();
+
+    expect($offer->reviews()->count())->toBe(1);
+    expect($offer->post->user->fresh()->reputation)->toBe(5.0);
 });
 
 test('a rating must be between 1 and 5', function () {
@@ -343,4 +360,113 @@ test('only the declined user sees the declined badge on explore', function () {
     Livewire::test('posts.search-and-filter')
         ->assertDontSee('Declined')
         ->assertSee('Propose swap');
+});
+
+test('sending an offer twice creates only one pending offer', function () {
+    $post = Post::factory()->create();
+
+    $this->actingAs(User::factory()->create());
+
+    Livewire::test('posts.send-offer', ['post' => $post])
+        ->call('sendOffer')
+        ->call('sendOffer');
+
+    expect($post->offers()->count())->toBe(1);
+});
+
+test('no offer is created when the post stopped being available', function (PostStatus $status) {
+    $component = Livewire::actingAs(User::factory()->create())
+        ->test('posts.send-offer', ['post' => $post = Post::factory()->create()]);
+
+    $post->update(['status' => $status]);
+
+    $component->call('sendOffer');
+
+    expect($post->offers()->count())->toBe(0);
+})->with([PostStatus::IN_PROGRESS, PostStatus::CANCELLED]);
+
+test('a user can have ended offers and a new pending one on the same post', function () {
+    $declined = PostOffer::factory()->create(['status' => PostOfferStatus::REJECTED]);
+    PostOffer::factory()->for($declined->post)->for($declined->user)->create(['status' => PostOfferStatus::CANCELLED]);
+
+    $this->actingAs($declined->user);
+    Livewire::test('posts.send-offer', ['post' => $declined->post])->call('sendOffer');
+
+    expect($declined->post->offers()->where('status', PostOfferStatus::PENDING)->count())->toBe(1);
+});
+
+test('a participant can undo marking the exchange as complete', function () {
+    $offer = PostOffer::factory()->accepted()->create();
+    $offer->completeOffers()->create(['user_id' => $offer->user_id]);
+
+    $this->actingAs($offer->user)
+        ->get(route('posts.progress.show', $offer))
+        ->assertSee('Undo mark as complete');
+
+    $this->delete(route('posts.progress.complete.undo', $offer))->assertRedirect();
+
+    expect($offer->hasBeenCompletedBy($offer->user))->toBeFalse();
+
+    $this->get(route('posts.progress.show', $offer))->assertDontSee('Undo mark as complete');
+});
+
+test('completion cannot be undone once both participants confirmed', function () {
+    $offer = PostOffer::factory()->accepted()->create();
+    $offer->completeOffers()->create(['user_id' => $offer->user_id]);
+    $offer->completeOffers()->create(['user_id' => $offer->post->user_id]);
+    $offer->post->update(['status' => PostStatus::COMPLETED]);
+
+    $this->actingAs($offer->user)
+        ->delete(route('posts.progress.complete.undo', $offer))
+        ->assertForbidden();
+
+    expect($offer->completeOffers()->count())->toBe(2);
+});
+
+test('a participant can withdraw their cancel request', function () {
+    $offer = PostOffer::factory()->accepted()->create();
+    $offer->cancelOffers()->create(['user_id' => $offer->user_id]);
+
+    $this->actingAs($offer->user)
+        ->get(route('posts.progress.show', $offer))
+        ->assertSee('Withdraw cancel request');
+
+    $this->delete(route('posts.progress.cancel.withdraw', $offer))->assertRedirect();
+
+    expect($offer->hasRequestedCancelBy($offer->user))->toBeFalse();
+    expect($offer->fresh()->status)->toBe(PostOfferStatus::ACCEPTED);
+});
+
+test('only the participant who asked can withdraw a cancel request', function () {
+    $offer = PostOffer::factory()->accepted()->create();
+    $offer->cancelOffers()->create(['user_id' => $offer->user_id]);
+
+    $this->actingAs($offer->post->user)
+        ->delete(route('posts.progress.cancel.withdraw', $offer))
+        ->assertForbidden();
+
+    $this->actingAs(User::factory()->create())
+        ->delete(route('posts.progress.cancel.withdraw', $offer))
+        ->assertForbidden();
+
+    expect($offer->hasRequestedCancelBy($offer->user))->toBeTrue();
+});
+
+test('the in progress page uses the same number of queries however many exchanges there are', function () {
+    $user = User::factory()->create();
+    $countQueries = function () use ($user): int {
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+        $this->actingAs($user)->get(route('posts.progress'))->assertOk();
+
+        return count(DB::getQueryLog());
+    };
+
+    PostOffer::factory()->accepted()->for($user)->create();
+    $queriesWithOne = $countQueries();
+
+    PostOffer::factory()->accepted()->for($user)->count(4)->create();
+    $queriesWithFive = $countQueries();
+
+    expect($queriesWithFive)->toBe($queriesWithOne);
 });

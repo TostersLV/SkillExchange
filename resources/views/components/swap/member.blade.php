@@ -1,6 +1,6 @@
 @props(['user', 'link' => false, 'caption' => null])
 
-{{-- A member's avatar, name, verified check and rating. "caption" replaces the rating line (e.g. "Sent 2 days ago"). --}}
+{{-- A member's avatar, name and rating. "caption" replaces the rating line (e.g. "Sent 2 days ago"). --}}
 <div {{ $attributes->merge(['class' => 'flex min-w-0 items-center gap-3']) }}>
     <flux:avatar size="lg" circle :name="$user->username" :initials="$user->initials()" />
 
@@ -11,10 +11,6 @@
                     class="truncate rounded font-bold text-strong underline-offset-2 hover:underline">{{ $user->username }}</a>
             @else
                 <span class="truncate font-bold text-strong">{{ $user->username }}</span>
-            @endif
-            @if ($user->email_verified_at)
-                <flux:icon.check-badge variant="micro" class="size-4 shrink-0 text-swap" aria-hidden="true" />
-                <span class="sr-only">Verified</span>
             @endif
         </p>
 

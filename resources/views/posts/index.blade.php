@@ -47,12 +47,6 @@
                 class="w-full shrink-0 space-y-5 rounded-[1.25rem] bg-navy p-6 text-paper shadow-[0_20px_40px_-16px_color-mix(in_oklab,#0f1e3d_45%,transparent)] ring-1 ring-paper/5 lg:w-[420px]">
                 <div class="flex items-center justify-between gap-3">
                     <p class="text-sm font-semibold text-paper/70">Your exchange profile</p>
-                    @if ($user->email_verified_at)
-                        <span class="inline-flex items-center gap-1.5 rounded-full bg-swap/15 px-2.5 py-1 text-xs font-bold text-emerald-300">
-                            <flux:icon.shield-check variant="micro" class="size-3.5" aria-hidden="true" />
-                            Verified member
-                        </span>
-                    @endif
                 </div>
 
                 <div class="space-y-1">
@@ -142,7 +136,7 @@
 
         <section aria-label="Why SkillExchange" class="grid gap-4 pt-20 md:grid-cols-3">
             @foreach ([
-                ['icon' => 'shield-check', 'tone' => 'bg-swap-soft text-swap-text', 'title' => 'Verified profiles', 'text' => 'Every member confirms their email before they can propose a swap.'],
+                ['icon' => 'shield-check', 'tone' => 'bg-swap-soft text-swap-text', 'title' => 'Private exchange chats', 'text' => 'Only the two members of an exchange can read its chat.'],
                 ['icon' => 'star', 'tone' => 'bg-amber/15 text-[#b45309] dark:text-amber', 'title' => 'Rated after every exchange', 'text' => 'Both sides leave a review when a swap is done, so reputation is earned.'],
                 ['icon' => 'clock', 'tone' => 'bg-brand/8 text-strong', 'title' => 'Fair time-for-time swaps', 'text' => 'An hour of your skill for an hour of theirs. No money changes hands.'],
             ] as $point)

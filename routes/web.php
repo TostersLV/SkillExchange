@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::view('welcome', 'welcome')->middleware('guest')->name('welcome');
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware('auth')->group(function () {
     Route::get('/', [PostController::class, 'index'])->name('home');
 
     Route::get('users/{user}', [ProfileController::class, 'show'])->name('profile.show');
@@ -21,6 +21,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('progress/{offer}/complete', [PostProgressController::class, 'complete'])->name('posts.progress.complete');
     Route::patch('progress/{offer}/review', [PostProgressController::class, 'review'])->name('posts.progress.review');
     Route::patch('progress/{offer}/cancel', [PostProgressController::class, 'cancel'])->name('posts.progress.cancel');
+    Route::delete('progress/{offer}/complete', [PostProgressController::class, 'undoComplete'])->name('posts.progress.complete.undo');
+    Route::delete('progress/{offer}/cancel', [PostProgressController::class, 'withdrawCancel'])->name('posts.progress.cancel.withdraw');
     Route::patch('offers/{offer}/accept', [PostOfferController::class, 'accept'])->name('post.offers.accept');
 
     Route::get('posts/create', [PostController::class, 'create'])->name('posts.create');

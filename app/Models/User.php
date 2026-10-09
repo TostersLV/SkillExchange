@@ -2,13 +2,13 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\PostOfferStatus;
 use App\PostStatus;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
- * @property string|null $reputation
+ * @property-read float|null $reputation
  */
 #[Fillable(['username', 'bio', 'email', 'password', 'profile_picture'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
@@ -37,7 +37,6 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'reputation' => 'decimal:2',
         ];
     }
 
@@ -59,6 +58,24 @@ class User extends Authenticatable
     public function posts(): HasMany
     {
         return $this->hasMany(Post::class);
+    }
+
+    /**
+     * The user's rating: the average of all reviews other members left about them, calculated from the
+     * reviews themselves so it can never drift out of sync. Lists load it in one query with
+     * withAvg('reviewsReceived', 'review'); otherwise it's calculated on first use.
+     *
+     * @return Attribute<float|null, never>
+     */
+    protected function reputation(): Attribute
+    {
+        return Attribute::make(get: function (): ?float {
+            $average = array_key_exists('reviews_received_avg_review', $this->attributes)
+                ? $this->attributes['reviews_received_avg_review']
+                : $this->reviewsReceived()->avg('review');
+
+            return $average === null ? null : round((float) $average, 2);
+        })->shouldCache();
     }
 
     /**

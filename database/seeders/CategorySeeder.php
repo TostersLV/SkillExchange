@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Category;
 use Illuminate\Database\Seeder;
 
 class CategorySeeder extends Seeder
@@ -11,21 +12,24 @@ class CategorySeeder extends Seeder
      */
     public function run(): void
     {
-        $insert = [
-            ['name' => 'Programming'],
-            ['name' => 'Design'],
-            ['name' => 'Writing & Translation'],
-            ['name' => 'Marketing'],
-            ['name' => 'Music & Audio'],
-            ['name' => 'Languages'],
-            ['name' => 'Photography'],
-            ['name' => 'Video & Animation'],
-            ['name' => 'Business'],
-            ['name' => 'Data & Analytics'],
-            ['name' => 'Crafts & DIY'],
-            ['name' => 'Fitness & Wellness'],
+        $names = [
+            'Programming',
+            'Design',
+            'Writing & Translation',
+            'Marketing',
+            'Music & Audio',
+            'Languages',
+            'Photography',
+            'Video & Animation',
+            'Business',
+            'Data & Analytics',
+            'Crafts & DIY',
+            'Fitness & Wellness',
         ];
 
-        \DB::table('categories')->insert($insert);
+        // firstOrCreate makes the seeder safe to run again: existing categories are left as they are
+        foreach ($names as $name) {
+            Category::firstOrCreate(['name' => $name]);
+        }
     }
 }

@@ -3,8 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\PostOffer;
-use App\Models\Review;
-use App\Models\User;
 use App\PostOfferStatus;
 use App\PostStatus;
 use Illuminate\Contracts\View\View;
@@ -18,7 +16,7 @@ class PostProgressController extends Controller
 {
     public function index(): View
     {
-        $matches = PostOffer::query()->with(['post', 'user'])->where('status', PostOfferStatus::ACCEPTED)->where(function ($query) {
+        $matches = PostOffer::query()->with(['post.user', 'user'])->where('status', PostOfferStatus::ACCEPTED)->where(function ($query) {
             $query->where('user_id', Auth::id())->orWhereRelation('post', 'user_id', Auth::id());
         })->latest()->get();
 
@@ -99,6 +97,42 @@ class PostProgressController extends Controller
             : redirect()->route('posts.progress');
     }
 
+    /**
+     * Take back "mark as complete" while the other participant hasn't confirmed yet.
+     */
+    public function undoComplete(Request $request, PostOffer $offer): RedirectResponse
+    {
+        $user = $request->user();
+
+        DB::transaction(function () use ($offer, $user) {
+            $offer = $offer->lockWithPost();
+
+            Gate::forUser($user)->authorize('undoComplete', $offer);
+
+            $offer->completeOffers()->where('user_id', $user->id)->delete();
+        });
+
+        return back();
+    }
+
+    /**
+     * Withdraw a cancel request while the other participant hasn't agreed yet.
+     */
+    public function withdrawCancel(Request $request, PostOffer $offer): RedirectResponse
+    {
+        $user = $request->user();
+
+        DB::transaction(function () use ($offer, $user) {
+            $offer = $offer->lockWithPost();
+
+            Gate::forUser($user)->authorize('withdrawCancel', $offer);
+
+            $offer->cancelOffers()->where('user_id', $user->id)->delete();
+        });
+
+        return back();
+    }
+
     public function review(Request $request, PostOffer $offer): RedirectResponse
     {
         $user = $request->user();
@@ -109,19 +143,19 @@ class PostProgressController extends Controller
             'rating' => ['required', 'integer', 'between:1,5'],
         ]);
 
-        $revieweeId = $offer->user_id === $user->id ? $offer->post->user_id : $offer->user_id;
+        // Lock the exchange and check again inside, so a double submit is refused instead of saving twice.
+        // The reviewed user's rating is the average of their reviews, so there's nothing else to update.
+        DB::transaction(function () use ($offer, $user, $validated) {
+            $offer = $offer->lockWithPost();
 
-        $offer->reviews()->create([
-            'reviewer_id' => $user->id,
-            'reviewee_id' => $revieweeId,
-            'review' => $validated['rating'],
-        ]);
+            Gate::forUser($user)->authorize('review', $offer);
 
-        $average = (float) Review::where('reviewee_id', $revieweeId)->avg('review');
-
-        $reviewee = User::findOrFail($revieweeId);
-        $reviewee->reputation = (string) round($average, 2);
-        $reviewee->save();
+            $offer->reviews()->create([
+                'reviewer_id' => $user->id,
+                'reviewee_id' => $offer->user_id === $user->id ? $offer->post->user_id : $offer->user_id,
+                'review' => $validated['rating'],
+            ]);
+        });
 
         return back();
     }
