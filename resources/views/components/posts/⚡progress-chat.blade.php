@@ -114,7 +114,7 @@ new class extends Component {
 
     {{-- Header --}}
     <div class="flex items-center gap-3 border-b border-line px-5 py-4">
-        <flux:avatar size="sm" :name="$otherUser->username" :initials="$otherUser->initials()" />
+        <flux:avatar size="sm" :src="$otherUser->profilePictureUrl()" :name="$otherUser->username" :initials="$otherUser->initials()" />
         <div class="min-w-0">
             <h2 class="truncate text-sm font-semibold text-strong">{{ $otherUsername }}</h2>
             <p class="truncate text-xs text-muted">{{ $offer->post->offering_skill }} &harr; {{ $offer->post->looking_skill }}</p>
@@ -162,7 +162,7 @@ new class extends Component {
                     @unless ($isMine)
                         <div class="w-7 shrink-0">
                             @if ($startsGroup)
-                                <flux:avatar size="xs" :name="$message->user->username" :initials="$message->user->initials()" />
+                                <flux:avatar size="xs" :src="$message->user->profilePictureUrl()" :name="$message->user->username" :initials="$message->user->initials()" />
                             @endif
                         </div>
                     @endunless

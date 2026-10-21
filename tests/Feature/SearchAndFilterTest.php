@@ -8,14 +8,27 @@ use App\PostStatus;
 use Livewire\Livewire;
 
 test('searching shows only matching posts', function () {
+    // Izveido divus sludinājumus ar dažādām prasmēm
     Post::factory()->create(['offering_skill' => 'Guitar lessons', 'looking_skill' => 'Spanish']);
     Post::factory()->create(['offering_skill' => 'Baking', 'looking_skill' => 'Photography']);
 
+    // Piesakās kā lietotājs, atver meklēšanas komponenti un ievada meklēšanas tekstu
     Livewire::actingAs(User::factory()->create())
         ->test('posts.search-and-filter')
         ->set('search', 'Guitar')
-        ->assertSee('Guitar lessons')
-        ->assertDontSee('Baking');
+        ->assertSee('Guitar lessons') // atbilstošais sludinājums ir redzams
+        ->assertDontSee('Baking'); // neatbilstošais sludinājums netiek rādīts
+});
+
+test('searching for a skill nobody offers shows an empty message', function () {
+    Post::factory()->create(['offering_skill' => 'Guitar lessons']);
+
+    // Meklē tekstu, kas neatbilst nevienam sludinājumam
+    Livewire::actingAs(User::factory()->create())
+        ->test('posts.search-and-filter')
+        ->set('search', 'Zzzzz')
+        ->assertDontSee('Guitar lessons') // neviens sludinājums netiek rādīts
+        ->assertSee('No exchanges match your search'); // lietotājs redz paziņojumu, ka nekas netika atrasts
 });
 
 test('the teach field matches the skill someone is looking for', function () {

@@ -15,6 +15,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 /**
@@ -50,6 +51,28 @@ class User extends Authenticatable
         return Str::length($initials) > 1
             ? Str::substr($initials, 0, 1).Str::substr($initials, -1)
             : $initials;
+    }
+
+    /**
+     * The public URL of the user's uploaded profile picture, or null when they have none.
+     */
+    public function profilePictureUrl(): ?string
+    {
+        return $this->profile_picture
+            ? Storage::disk('public')->url($this->profile_picture)
+            : null;
+    }
+
+    /**
+     * Delete the user's stored profile picture file and clear the column.
+     */
+    public function removeProfilePicture(): void
+    {
+        if ($this->profile_picture) {
+            Storage::disk('public')->delete($this->profile_picture);
+        }
+
+        $this->forceFill(['profile_picture' => null])->save();
     }
 
     /**
@@ -114,6 +137,10 @@ class User extends Authenticatable
      */
     public function deactivate(): void
     {
+        if ($this->profile_picture) {
+            Storage::disk('public')->delete($this->profile_picture);
+        }
+
         DB::transaction(function () {
             PostOffer::query()
                 ->where('status', PostOfferStatus::PENDING)

@@ -1,8 +1,10 @@
 @props(['categories', 'post' => null])
 
-{{-- The shared fields of the create and edit forms: the two skills side by side, like a currency converter. --}}
-<div class="grid items-start gap-3 rounded-[1.25rem] border border-line bg-page p-3 sm:p-4 md:grid-cols-[1fr_auto_1fr]">
-    <div class="rounded-2xl bg-surface p-4">
+{{-- The shared fields of the create and edit forms: the two skills side by side, like a currency converter.
+     Both boxes stretch to the same height and keep their input at the bottom, so the inputs line up
+     even when one hint wraps onto two lines. --}}
+<div class="grid items-stretch gap-3 rounded-[1.25rem] border border-line bg-page p-3 sm:p-4 md:grid-cols-[1fr_auto_1fr]">
+    <div class="flex flex-col rounded-2xl bg-surface p-4 [&>[data-flux-field]]:flex [&>[data-flux-field]]:flex-1 [&>[data-flux-field]]:flex-col [&_[data-flux-input]]:mt-auto">
         <flux:input name="offering_skill" :value="old('offering_skill', $post?->offering_skill)" type="text"
             label="You offer" description="Be specific, e.g. beginner guitar lessons or CV review."
             placeholder="e.g. Guitar lessons 2h" />
@@ -12,7 +14,7 @@
         <x-swap.icon class="size-5" />
     </span>
 
-    <div class="rounded-2xl bg-surface p-4">
+    <div class="flex flex-col rounded-2xl bg-surface p-4 [&>[data-flux-field]]:flex [&>[data-flux-field]]:flex-1 [&>[data-flux-field]]:flex-col [&_[data-flux-input]]:mt-auto">
         <flux:input name="looking_skill" :value="old('looking_skill', $post?->looking_skill)" type="text"
             label="You want in return" description="What would you like to learn?"
             placeholder="e.g. Spanish conversation 2h" />

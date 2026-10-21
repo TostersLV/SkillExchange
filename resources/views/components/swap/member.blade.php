@@ -2,7 +2,7 @@
 
 {{-- A member's avatar, name and rating. "caption" replaces the rating line (e.g. "Sent 2 days ago"). --}}
 <div {{ $attributes->merge(['class' => 'flex min-w-0 items-center gap-3']) }}>
-    <flux:avatar size="lg" circle :name="$user->username" :initials="$user->initials()" />
+    <flux:avatar size="lg" circle :src="$user->profilePictureUrl()" :name="$user->username" :initials="$user->initials()" />
 
     <div class="min-w-0 space-y-0.5">
         <p class="flex items-center gap-1.5">

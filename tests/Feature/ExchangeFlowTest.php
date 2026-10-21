@@ -75,25 +75,31 @@ test('users cannot review before the exchange is completed', function () {
         ->assertForbidden();
 });
 
-test('a user\'s rating is the average of the reviews they received', function () {
+test('a users rating is the average of the reviews they received', function () {
+    // Sludinājuma autors ir pabeidzis divas apmaiņas ar diviem dažādiem lietotājiem
     $author = User::factory()->create();
     $firstExchange = PostOffer::factory()->for(Post::factory()->for($author)->state(['status' => PostStatus::COMPLETED]))->create(['status' => PostOfferStatus::ACCEPTED]);
     $secondExchange = PostOffer::factory()->for(Post::factory()->for($author)->state(['status' => PostStatus::COMPLETED]))->create(['status' => PostOfferStatus::ACCEPTED]);
 
+    // Pirmais lietotājs novērtē autoru ar 5 zvaigznēm
     $this->actingAs($firstExchange->user)
         ->patch(route('posts.progress.review', $firstExchange), ['rating' => 5])
         ->assertRedirect();
 
+    // Vērtējums ir saglabāts datubāzē
     $this->assertDatabaseHas('reviews', [
         'reviewer_id' => $firstExchange->user_id,
         'reviewee_id' => $author->id,
         'review' => 5,
     ]);
 
+    // Otrais lietotājs novērtē autoru ar 2 zvaigznēm
     $this->actingAs($secondExchange->user)
         ->patch(route('posts.progress.review', $secondExchange), ['rating' => 2]);
 
+    // Autora reputācija ir abu vērtējumu vidējā vērtība (5 + 2) / 2 = 3,5
     expect($author->fresh()->reputation)->toBe(3.5);
+    // Lietotājam bez vērtējumiem reputācijas nav
     expect(User::factory()->create()->reputation)->toBeNull();
 });
 

@@ -275,3 +275,51 @@ test('the database refuses to delete a post that has offers', function () {
 
     $this->assertModelExists($offer);
 });
+
+test('a member can create a post', function () {
+    // Pieteicies lietotājs un kategorija, kuru viņš izvēlēsies sludinājumam
+    $user = User::factory()->create();
+    $category = Category::factory()->create();
+
+    // Nosūta sludinājuma izveides formu ar derīgiem datiem
+    $this->actingAs($user)
+        ->post(route('post.store'), [
+            'offering_skill' => 'Guitar lessons',
+            'looking_skill' => 'Spanish',
+            'category_id' => $category->id,
+            'description' => 'Weekends work best for me.',
+        ])
+        ->assertRedirect(route('home')); // lietotājs tiek pārvirzīts uz sākumlapu
+
+    // Sludinājums ir saglabāts datubāzē, tā autors ir lietotājs un tas ir pieejams piedāvājumiem
+    $this->assertDatabaseHas('posts', [
+        'user_id' => $user->id,
+        'category_id' => $category->id,
+        'offering_skill' => 'Guitar lessons',
+        'looking_skill' => 'Spanish',
+        'status' => PostStatus::AVAILABLE->value,
+    ]);
+});
+
+test('creating a post is refused for invalid input', function (array $changes, string $field) {
+    $category = Category::factory()->create();
+
+    // Derīgi dati, no kuriem katrā gadījumā tiek mainīts viens lauks
+    $input = array_merge([
+        'offering_skill' => 'Guitar lessons',
+        'looking_skill' => 'Spanish',
+        'category_id' => $category->id,
+    ], $changes);
+
+    // Sistēma atgriež kļūdu konkrētajam laukam
+    $this->actingAs(User::factory()->create())
+        ->post(route('post.store'), $input)
+        ->assertSessionHasErrors($field);
+
+    // Sludinājums netiek saglabāts
+    $this->assertDatabaseCount('posts', 0);
+})->with([
+    'offering skill too short' => [['offering_skill' => 'abc'], 'offering_skill'],
+    'looking skill too long' => [['looking_skill' => str_repeat('a', 31)], 'looking_skill'],
+    'category missing' => [['category_id' => ''], 'category_id'],
+]);

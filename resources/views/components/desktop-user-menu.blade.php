@@ -1,10 +1,10 @@
 <flux:dropdown position="bottom" align="end">
-    <flux:profile :name="auth()->user()->username" :initials="auth()->user()->initials()" icon:trailing="chevron-down"
+    <flux:profile :avatar="auth()->user()->profilePictureUrl()" :name="auth()->user()->username" :initials="auth()->user()->initials()" icon:trailing="chevron-down"
         data-test="sidebar-menu-button" />
 
     <flux:menu>
         <div class="flex items-center gap-2 px-1 py-1.5 text-start text-sm">
-            <flux:avatar :name="auth()->user()->username" :initials="auth()->user()->initials()" />
+            <flux:avatar :src="auth()->user()->profilePictureUrl()" :name="auth()->user()->username" :initials="auth()->user()->initials()" />
             <div class="grid flex-1 text-start text-sm leading-tight">
                 <flux:heading class="truncate">{{ auth()->user()->username }}</flux:heading>
                 <flux:text class="truncate">{{ auth()->user()->email }}</flux:text>

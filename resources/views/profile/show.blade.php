@@ -6,7 +6,7 @@
         <section aria-label="Exchange profile"
             class="grid gap-8 rounded-[1.25rem] bg-navy p-6 text-paper shadow-[0_20px_40px_-16px_color-mix(in_oklab,#0f1e3d_45%,transparent)] ring-1 ring-paper/5 sm:p-8 lg:grid-cols-[1fr_420px] lg:items-center">
             <div class="flex min-w-0 items-center gap-5">
-                <flux:avatar size="xl" circle :name="$user->username" :initials="$user->initials()" class="!bg-paper/10 !text-paper" />
+                <flux:avatar size="xl" circle :src="$user->profilePictureUrl()" :name="$user->username" :initials="$user->initials()" class="!bg-paper/10 !text-paper" />
 
                 <div class="min-w-0 space-y-2">
                     <div class="flex flex-wrap items-center gap-2">
@@ -22,9 +22,9 @@
             </div>
 
             <div class="space-y-4">
-                <dl class="grid grid-cols-3 gap-px overflow-hidden rounded-2xl bg-paper/10">
+                <dl class="grid grid-cols-[repeat(3,auto)] gap-px overflow-hidden rounded-2xl bg-paper/10">
                     <div class="flex flex-col-reverse gap-1 bg-[#15274b] p-4">
-                        <dt class="text-xs text-paper/70">Reputation</dt>
+                        <dt class="text-xs whitespace-nowrap text-paper/70">Reputation</dt>
                         <dd class="flex items-center gap-1.5 text-2xl font-extrabold tabular-nums">
                             @if ($user->reputation !== null)
                                 {{ number_format((float) $user->reputation, 1) }}
@@ -35,11 +35,11 @@
                         </dd>
                     </div>
                     <div class="flex flex-col-reverse gap-1 bg-[#15274b] p-4">
-                        <dt class="text-xs text-paper/70">{{ str('Review')->plural($reviewsCount) }}</dt>
+                        <dt class="text-xs whitespace-nowrap text-paper/70">{{ str('Review')->plural($reviewsCount) }}</dt>
                         <dd class="text-2xl font-extrabold tabular-nums">{{ $reviewsCount }}</dd>
                     </div>
                     <div class="flex flex-col-reverse gap-1 bg-[#15274b] p-4">
-                        <dt class="text-xs text-paper/70">Completed swaps</dt>
+                        <dt class="text-xs whitespace-nowrap text-paper/70">Completed swaps</dt>
                         <dd class="text-2xl font-extrabold text-emerald-300 tabular-nums">{{ $completedExchangesCount }}</dd>
                     </div>
                 </dl>

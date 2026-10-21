@@ -7,6 +7,8 @@ use App\Models\PostOffer;
 use App\Models\User;
 use App\PostOfferStatus;
 use App\PostStatus;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 
 test('profile page is displayed', function () {
@@ -16,19 +18,23 @@ test('profile page is displayed', function () {
 });
 
 test('profile information can be updated', function () {
+    // Pieteicies lietotājs atver profila iestatījumu komponenti
     $user = User::factory()->create();
 
     $this->actingAs($user);
 
+    // Ievada jaunu lietotājvārdu un e-pastu un saglabā izmaiņas
     $response = Livewire::test(Profile::class)
         ->set('username', 'TestUser')
         ->set('email', 'test@example.com')
         ->call('updateProfileInformation');
 
+    // Nav validācijas kļūdu
     $response->assertHasNoErrors();
 
     $user->refresh();
 
+    // Jaunie dati ir saglabāti datubāzē
     expect($user->username)->toEqual('TestUser');
     expect($user->email)->toEqual('test@example.com');
     expect($user->email_verified_at)->toBeNull();
@@ -139,4 +145,86 @@ test('correct password must be provided to delete account', function () {
     $response->assertHasErrors(['password']);
 
     expect($user->fresh())->not->toBeNull();
+});
+
+test('a profile picture can be uploaded and is stored on the public disk', function () {
+    Storage::fake('public');
+    $user = User::factory()->create();
+
+    $this->actingAs($user);
+
+    // Lietotājs izvēlas attēlu un saglabā profilu
+    Livewire::test(Profile::class)
+        ->set('username', $user->username)
+        ->set('email', $user->email)
+        ->set('photo', UploadedFile::fake()->image('avatar.png'))
+        ->call('updateProfileInformation')
+        ->assertHasNoErrors();
+
+    // Fails ir saglabāts un ceļš ierakstīts lietotāja profilā
+    $path = $user->refresh()->profile_picture;
+
+    expect($path)->toStartWith('profile-pictures/');
+    Storage::disk('public')->assertExists($path);
+    expect($user->profilePictureUrl())->not->toBeNull();
+});
+
+test('uploading a new profile picture deletes the previous file', function () {
+    Storage::fake('public');
+    $user = User::factory()->create();
+    $oldPath = UploadedFile::fake()->image('old.png')->store('profile-pictures', 'public');
+    $user->forceFill(['profile_picture' => $oldPath])->save();
+
+    $this->actingAs($user);
+
+    Livewire::test(Profile::class)
+        ->set('photo', UploadedFile::fake()->image('new.png'))
+        ->call('updateProfileInformation')
+        ->assertHasNoErrors();
+
+    Storage::disk('public')->assertMissing($oldPath);
+    Storage::disk('public')->assertExists($user->refresh()->profile_picture);
+});
+
+test('files that are not small images are rejected as a profile picture', function (UploadedFile $file) {
+    Storage::fake('public');
+    $user = User::factory()->create();
+
+    $this->actingAs($user);
+
+    Livewire::test(Profile::class)
+        ->set('photo', $file)
+        ->assertHasErrors(['photo'])
+        ->assertSet('photo', null);
+
+    expect($user->refresh()->profile_picture)->toBeNull();
+})->with([
+    'a pdf document' => fn () => UploadedFile::fake()->create('cv.pdf', 100, 'application/pdf'),
+    'an image over 2 MB' => fn () => UploadedFile::fake()->image('huge.png')->size(3000),
+]);
+
+test('a profile picture can be removed', function () {
+    Storage::fake('public');
+    $user = User::factory()->create();
+    $path = UploadedFile::fake()->image('avatar.png')->store('profile-pictures', 'public');
+    $user->forceFill(['profile_picture' => $path])->save();
+
+    $this->actingAs($user);
+
+    Livewire::test(Profile::class)->call('removePhoto');
+
+    Storage::disk('public')->assertMissing($path);
+    expect($user->refresh()->profile_picture)->toBeNull();
+});
+
+test('deactivating an account deletes the profile picture file', function () {
+    Storage::fake('public');
+    $user = User::factory()->create();
+    $path = UploadedFile::fake()->image('avatar.png')->store('profile-pictures', 'public');
+    $user->forceFill(['profile_picture' => $path])->save();
+
+    $user->deactivate();
+
+    Storage::disk('public')->assertMissing($path);
+    expect($user->refresh()->profile_picture)->toBeNull();
 });
