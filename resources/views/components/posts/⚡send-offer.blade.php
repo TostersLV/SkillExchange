@@ -64,7 +64,7 @@ new class extends Component {
      */
     public function closedOfferStatus(): ?PostOfferStatus
     {
-        return Auth::user()->closedOfferStatusesByPost()->get($this->post->id);
+        return Auth::user()->closedOfferStatusesByPost([$this->post->id])->get($this->post->id);
     }
 
     public function isAvailable(): bool

@@ -3,7 +3,9 @@
 namespace App\Concerns;
 
 use App\Models\User;
+use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 trait ProfileValidationRules
@@ -11,7 +13,7 @@ trait ProfileValidationRules
     /**
      * Get the validation rules used to validate user profiles.
      *
-     * @return array<string, array<int, ValidationRule|array<mixed>|string>>
+     * @return array<string, array<int, ValidationRule|Closure|array<mixed>|string>>
      */
     protected function profileRules(?int $userId = null): array
     {
@@ -24,7 +26,7 @@ trait ProfileValidationRules
     /**
      * Get the validation rules used to validate usernames.
      *
-     * @return array<int, ValidationRule|array<mixed>|string>
+     * @return array<int, ValidationRule|Closure|array<mixed>|string>
      */
     protected function usernameRules(?int $userId = null): array
     {
@@ -36,6 +38,11 @@ trait ProfileValidationRules
             $userId === null
                 ? Rule::unique(User::class)
                 : Rule::unique(User::class)->ignore($userId),
+            function (string $attribute, mixed $value, Closure $fail): void {
+                if (is_string($value) && Str::lower(Str::squish($value)) === Str::lower(User::DeletedUsername)) {
+                    $fail('This username is reserved.');
+                }
+            },
         ];
     }
 

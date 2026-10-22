@@ -36,10 +36,16 @@
                             </div>
                         </div>
 
-                        <a href="{{ route('posts.show', $offer->post) }}" wire:navigate class="group block rounded-full focus-visible:outline-offset-4">
+                        {{-- Only link to the post while it can still be opened, otherwise the link just bounces to the home page --}}
+                        @can('view', $offer->post)
+                            <a href="{{ route('posts.show', $offer->post) }}" wire:navigate class="group block rounded-full focus-visible:outline-offset-4">
+                                <x-swap.trade :offering="$offer->post->offering_skill" :looking="$offer->post->looking_skill"
+                                    :active="! $offer->status->isClosed()" />
+                            </a>
+                        @else
                             <x-swap.trade :offering="$offer->post->offering_skill" :looking="$offer->post->looking_skill"
                                 :active="! $offer->status->isClosed()" />
-                        </a>
+                        @endcan
 
                         @if ($offer->status === \App\PostOfferStatus::REJECTED && $offer->post->status === \App\PostStatus::CANCELLED)
                             <p class="text-sm text-muted">{{ $offer->post->user->username }} closed this post.</p>

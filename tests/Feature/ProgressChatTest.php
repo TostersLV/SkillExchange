@@ -3,6 +3,7 @@
 use App\Models\Message;
 use App\Models\PostOffer;
 use App\Models\User;
+use App\PostOfferStatus;
 use Livewire\Livewire;
 
 test('a participant can send a message', function () {
@@ -45,17 +46,32 @@ test('a message cannot be longer than 1000 characters', function () {
         ->assertHasErrors(['body' => 'max']);
 });
 
-test('strangers cannot send messages in someone else\'s exchange', function () {
+test('strangers cannot open the chat of someone else\'s exchange', function () {
     $offer = PostOffer::factory()->accepted()->create();
+    Message::factory()->for($offer, 'postOffer')->for($offer->user)->create(['body' => 'Private note.']);
 
     Livewire::actingAs(User::factory()->create())
         ->test('posts.progress-chat', ['offer' => $offer])
-        ->set('body', 'Sneaky')
-        ->call('sendMessage')
-        ->assertForbidden();
-
-    expect($offer->messages()->count())->toBe(0);
+        ->assertForbidden()
+        ->assertDontSee('Private note.');
 });
+
+test('an open chat stops working once the exchange is no longer active', function (string $action) {
+    $offer = PostOffer::factory()->accepted()->create();
+
+    $chat = Livewire::actingAs($offer->user)
+        ->test('posts.progress-chat', ['offer' => $offer])
+        ->set('body', 'Still there?');
+
+    $offer->update(['status' => PostOfferStatus::CANCELLED]);
+    Message::factory()->for($offer, 'postOffer')->for($offer->post->user)->create(['body' => 'Sent after cancelling.']);
+
+    $chat->call($action)
+        ->assertForbidden()
+        ->assertDontSee('Sent after cancelling.');
+
+    expect($offer->messages()->where('body', 'Still there?')->exists())->toBeFalse();
+})->with(['sendMessage', 'loadOlder', 'checkForNewMessages']);
 
 test('a long chat opens with the newest 50 messages', function () {
     $offer = PostOffer::factory()->accepted()->create();

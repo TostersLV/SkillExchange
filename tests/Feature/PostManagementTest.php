@@ -8,6 +8,8 @@ use App\Models\User;
 use App\PostOfferStatus;
 use App\PostStatus;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Livewire;
 
 test('the owner can delete their post', function () {
@@ -30,6 +32,44 @@ test('other users cannot delete a post', function () {
 
     $this->assertModelExists($post);
 });
+
+test('an offer sent at the same moment stops the post from being edited or deleted', function (string $method, string $routeName) {
+    $post = Post::factory()->create(['offering_skill' => 'Web design']);
+    $sender = User::factory()->create();
+    $offerSent = false;
+
+    // Simulates an offer arriving right after the first permission check passed, before the change is saved
+    Gate::after(function () use ($post, $sender, &$offerSent) {
+        if ($offerSent) {
+            return null;
+        }
+
+        $offerSent = true;
+        DB::table('post_offers')->insert([
+            'post_id' => $post->id,
+            'user_id' => $sender->id,
+            'status' => PostOfferStatus::PENDING,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return null;
+    });
+
+    $this->actingAs($post->user)
+        ->call($method, route($routeName, $post), [
+            'offering_skill' => 'Changed skill',
+            'looking_skill' => 'Spanish',
+            'category_id' => $post->category_id,
+        ])
+        ->assertForbidden();
+
+    $this->assertModelExists($post);
+    expect($post->fresh()->offering_skill)->toBe('Web design');
+})->with([
+    'edit' => ['PUT', 'posts.update'],
+    'delete' => ['DELETE', 'posts.destroy'],
+]);
 
 test('the owner can open the edit page', function () {
     $post = Post::factory()->create();

@@ -20,7 +20,7 @@ class ProfileController extends Controller
         return view('profile.show', [
             'user' => $user,
             'posts' => $posts,
-            'closedOffers' => Auth::user()->closedOfferStatusesByPost(),
+            'closedOffers' => Auth::user()->closedOfferStatusesByPost($posts->pluck('id')),
             'reviewsCount' => $user->reviewsReceived()->count(),
             'completedExchangesCount' => $user->completedExchangesCount(),
         ]);

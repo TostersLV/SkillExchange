@@ -5,6 +5,7 @@ namespace App\Livewire\Settings;
 use App\Concerns\ProfileValidationRules;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -66,13 +67,29 @@ class Profile extends Component
             $user->email_verified_at = null;
         }
 
+        // The old picture is only deleted once the new one is stored and saved, so a failure keeps the old one
+        $oldPicture = null;
+
         if ($this->photo) {
-            $user->removeProfilePicture();
-            $user->profile_picture = $this->photo->store('profile-pictures', 'public');
+            $newPicture = $this->photo->store('profile-pictures', 'public');
+
+            // Livewire returns the path even when writing the file failed, so check that it is really there
+            if ($newPicture === false || ! Storage::disk('public')->exists($newPicture)) {
+                $this->addError('photo', __('The picture could not be saved. Please try again.'));
+
+                return;
+            }
+
+            $oldPicture = $user->profile_picture;
+            $user->profile_picture = $newPicture;
             $this->photo = null;
         }
 
         $user->save();
+
+        if ($oldPicture) {
+            Storage::disk('public')->delete($oldPicture);
+        }
 
         Flux::toast(variant: 'success', text: __('Profile updated.'));
     }

@@ -170,11 +170,18 @@ class PostController extends Controller
             'description' => ['nullable', 'string', 'min:4', 'max:200'],
         ]);
 
-        $post->category_id = $request->category_id;
-        $post->offering_skill = $request->offering_skill;
-        $post->looking_skill = $request->looking_skill;
-        $post->description = $request->description;
-        $post->save();
+        // Lock the post and check again inside, so an offer sent at the same moment can't have its terms changed
+        DB::transaction(function () use ($request, $post) {
+            $post = Post::query()->lockForUpdate()->findOrFail($post->id);
+
+            Gate::authorize('update', $post);
+
+            $post->category_id = $request->category_id;
+            $post->offering_skill = $request->offering_skill;
+            $post->looking_skill = $request->looking_skill;
+            $post->description = $request->description;
+            $post->save();
+        });
 
         return redirect()->route('posts.show', $post);
     }
@@ -183,7 +190,14 @@ class PostController extends Controller
     {
         Gate::authorize('delete', $post);
 
-        $post->delete();
+        // Lock the post and check again inside, so an offer sent at the same moment stops the delete cleanly
+        DB::transaction(function () use ($post) {
+            $post = Post::query()->lockForUpdate()->findOrFail($post->id);
+
+            Gate::authorize('delete', $post);
+
+            $post->delete();
+        });
 
         return redirect()->route('home');
     }

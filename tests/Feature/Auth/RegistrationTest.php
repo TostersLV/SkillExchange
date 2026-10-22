@@ -48,6 +48,8 @@ test('registration is refused for invalid input', function (array $changes, stri
     expect(User::count())->toBe(0);
 })->with([
     'username too short' => [['username' => 'abc'], 'username'],
+    'reserved deleted user name' => [['username' => 'Deleted user'], 'username'],
+    'reserved name in other case and spacing' => [['username' => ' deleted   USER '], 'username'],
     'invalid email' => [['email' => 'not-an-email'], 'email'],
     'password too short' => [['password' => 'short', 'password_confirmation' => 'short'], 'password'],
     'passwords do not match' => [['password_confirmation' => 'different'], 'password'],

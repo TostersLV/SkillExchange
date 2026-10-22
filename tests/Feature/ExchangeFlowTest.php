@@ -47,6 +47,34 @@ test('the sender can withdraw their pending offer and it leaves their requests',
     $this->get(route('posts.requests'))->assertDontSee($offer->post->offering_skill);
 });
 
+test('withdrawing or declining cannot overwrite an offer accepted at the same moment', function (string $routeName, string $actor) {
+    $offer = PostOffer::factory()->create();
+    $acceptedMeanwhile = false;
+
+    // Simulates the owner's accept committing right after this request loaded the offer, while it still looked pending
+    PostOffer::retrieved(function () use ($offer, &$acceptedMeanwhile) {
+        if ($acceptedMeanwhile) {
+            return;
+        }
+
+        $acceptedMeanwhile = true;
+        DB::table('post_offers')->where('id', $offer->id)->update(['status' => PostOfferStatus::ACCEPTED]);
+        DB::table('posts')->where('id', $offer->post_id)->update(['status' => PostStatus::IN_PROGRESS]);
+    });
+
+    $user = $actor === 'sender' ? $offer->user : $offer->post->user;
+
+    $this->actingAs($user)
+        ->delete(route($routeName, $offer))
+        ->assertForbidden();
+
+    expect($offer->fresh()->status)->toBe(PostOfferStatus::ACCEPTED);
+    expect($offer->post->fresh()->status)->toBe(PostStatus::IN_PROGRESS);
+})->with([
+    'withdraw' => ['posts.offers.cancel', 'sender'],
+    'decline' => ['posts.offers.reject', 'owner'],
+]);
+
 test('the post completes only after both users confirm', function () {
     $offer = PostOffer::factory()->accepted()->create();
 
@@ -307,6 +335,25 @@ test('the requests page explains why an offer ended', function () {
         ->assertSee($lostOut->post->user->username.' completed this swap with another member.');
 });
 
+test('a request links to its post only while the post can still be opened', function (PostStatus $postStatus, PostOfferStatus $offerStatus, bool $linked) {
+    $offer = PostOffer::factory()
+        ->for(Post::factory()->state(['status' => $postStatus]))
+        ->create(['status' => $offerStatus]);
+
+    $response = $this->actingAs($offer->user)->get(route('posts.requests'));
+
+    $response->assertSee($offer->post->offering_skill);
+
+    $linked
+        ? $response->assertSee(route('posts.show', $offer->post), false)
+        : $response->assertDontSee(route('posts.show', $offer->post), false);
+})->with([
+    'pending on an available post' => [PostStatus::AVAILABLE, PostOfferStatus::PENDING, true],
+    'pending while another exchange is in progress' => [PostStatus::IN_PROGRESS, PostOfferStatus::PENDING, false],
+    'declined because the post was closed' => [PostStatus::CANCELLED, PostOfferStatus::REJECTED, false],
+    'cancelled after the post was completed' => [PostStatus::COMPLETED, PostOfferStatus::CANCELLED, false],
+]);
+
 test('the sender can dismiss an ended offer without deleting it', function () {
     $offer = PostOffer::factory()->create(['status' => PostOfferStatus::REJECTED]);
 
@@ -332,6 +379,16 @@ test('only the sender can dismiss, and only offers that ended', function () {
         ->assertForbidden();
 
     expect($declined->fresh()->dismissed_at)->toBeNull();
+});
+
+test('ended offer statuses are only looked up for the posts asked for', function () {
+    $user = User::factory()->create();
+    $shown = PostOffer::factory()->for($user)->create(['status' => PostOfferStatus::REJECTED]);
+    $notShown = PostOffer::factory()->for($user)->create(['status' => PostOfferStatus::REJECTED]);
+
+    $statuses = $user->closedOfferStatusesByPost([$shown->post_id]);
+
+    expect($statuses->all())->toBe([$shown->post_id => PostOfferStatus::REJECTED]);
 });
 
 test('a declined user sees why on the post and can propose again', function (PostOfferStatus $status, string $badge) {

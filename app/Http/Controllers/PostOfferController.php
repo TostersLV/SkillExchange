@@ -22,20 +22,28 @@ class PostOfferController extends Controller
 
     public function destroy(PostOffer $offer): RedirectResponse
     {
-        Gate::authorize('cancel', $offer);
+        DB::transaction(function () use ($offer) {
+            $offer = $offer->lockWithPost();
 
-        $offer->status = PostOfferStatus::WITHDRAWN;
-        $offer->save();
+            Gate::authorize('cancel', $offer);
+
+            $offer->status = PostOfferStatus::WITHDRAWN;
+            $offer->save();
+        });
 
         return back();
     }
 
     public function reject(PostOffer $offer): RedirectResponse
     {
-        Gate::authorize('reject', $offer);
+        DB::transaction(function () use ($offer) {
+            $offer = $offer->lockWithPost();
 
-        $offer->status = PostOfferStatus::REJECTED;
-        $offer->save();
+            Gate::authorize('reject', $offer);
+
+            $offer->status = PostOfferStatus::REJECTED;
+            $offer->save();
+        });
 
         return back();
     }

@@ -121,7 +121,7 @@ new class extends Component {
             'matches' => $posts->getCollection()
                 ->filter(fn (Post $post) => (int) $post->getAttribute('is_match') === 1)
                 ->pluck('id'),
-            'closedOffers' => auth()->user()->closedOfferStatusesByPost(),
+            'closedOffers' => auth()->user()->closedOfferStatusesByPost($posts->getCollection()->pluck('id')),
             'categories' => Category::orderBy('name')->get(),
             'isFiltered' => $this->search !== '' || $this->teach !== '' || $this->categoryId !== '',
         ];

@@ -25,13 +25,22 @@ new class extends Component {
 
     public function mount(): void
     {
+        Gate::authorize('view', $this->offer);
+
         $this->latestMessageId = $this->newestMessageId();
+    }
+
+    /**
+     * Runs before every request after the first render (sending, polling, loading older messages),
+     * so someone who lost access, e.g. because the exchange was cancelled, can no longer read or write.
+     */
+    public function hydrate(): void
+    {
+        Gate::authorize('view', $this->offer);
     }
 
     public function sendMessage(): void
     {
-        Gate::authorize('view', $this->offer);
-
         $this->validate(['body' => 'required|string|max:1000']);
 
         $rateLimitKey = 'send-message:'.Auth::id();

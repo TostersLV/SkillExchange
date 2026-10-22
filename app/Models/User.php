@@ -42,6 +42,21 @@ class User extends Authenticatable
     }
 
     /**
+     * The name shown for an account that has been deactivated, whose stored username is cleared.
+     */
+    public const DeletedUsername = 'Deleted user';
+
+    /**
+     * Deactivated accounts store no username, so they are shown under one shared placeholder name.
+     *
+     * @return Attribute<string, never>
+     */
+    protected function username(): Attribute
+    {
+        return Attribute::make(get: fn (?string $value): string => $value ?? self::DeletedUsername);
+    }
+
+    /**
      * Get the user's initials
      */
     public function initials(): string
@@ -156,7 +171,7 @@ class User extends Authenticatable
             $this->posts()->where('status', PostStatus::AVAILABLE)->update(['status' => PostStatus::CANCELLED]);
 
             $this->forceFill([
-                'username' => 'Deleted user',
+                'username' => null,
                 'bio' => null,
                 'email' => "deleted-{$this->id}@skillexchange.invalid",
                 'email_verified_at' => null,
@@ -170,14 +185,17 @@ class User extends Authenticatable
     }
 
     /**
-     * The posts where this user's latest offer was declined or its exchange cancelled, with how it ended.
+     * Among the given posts, the ones where this user's latest offer was declined or its exchange cancelled,
+     * with how it ended. Only the posts being shown are looked up, so it doesn't grow with the user's history.
      *
+     * @param  Collection<int, int>|array<int, int>  $postIds
      * @return Collection<int, PostOfferStatus> keyed by post id
      */
-    public function closedOfferStatusesByPost(): Collection
+    public function closedOfferStatusesByPost(Collection|array $postIds): Collection
     {
         return PostOffer::query()
             ->where('user_id', $this->id)
+            ->whereIn('post_id', $postIds)
             ->oldest('updated_at')
             ->oldest('id')
             ->get(['post_id', 'status'])

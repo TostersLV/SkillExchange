@@ -7,6 +7,7 @@ use App\Models\PostOffer;
 use App\Models\User;
 use App\PostOfferStatus;
 use App\PostStatus;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
@@ -71,11 +72,30 @@ test('deleting an account erases personal details and the old login stops workin
 
     $user->refresh();
     expect($user->username)->toBe('Deleted user');
+    $this->assertDatabaseHas('users', ['id' => $user->id, 'username' => null]);
     expect($user->email)->not->toBe($originalEmail);
     expect($user->bio)->toBeNull();
 
     $this->post(route('login.store'), ['email' => $originalEmail, 'password' => 'password']);
     $this->assertGuest();
+});
+
+test('several accounts can be deactivated and all show as deleted users', function () {
+    $first = User::factory()->create();
+    $second = User::factory()->create();
+
+    $first->deactivate();
+    $second->deactivate();
+
+    expect($first->fresh()->username)->toBe('Deleted user');
+    expect($second->fresh()->username)->toBe('Deleted user');
+});
+
+test('the database refuses two accounts with the same username', function () {
+    User::factory()->create(['username' => 'SameName']);
+
+    expect(fn () => User::factory()->create(['username' => 'SameName']))
+        ->toThrow(UniqueConstraintViolationException::class);
 });
 
 test('a user with an exchange in progress cannot delete their account', function () {
@@ -184,6 +204,45 @@ test('uploading a new profile picture deletes the previous file', function () {
 
     Storage::disk('public')->assertMissing($oldPath);
     Storage::disk('public')->assertExists($user->refresh()->profile_picture);
+});
+
+test('the previous profile picture is kept when saving the profile fails', function () {
+    Storage::fake('public');
+    $user = User::factory()->create();
+    $oldPath = UploadedFile::fake()->image('old.png')->store('profile-pictures', 'public');
+    $user->forceFill(['profile_picture' => $oldPath])->save();
+
+    User::saving(fn () => throw new RuntimeException('Database unavailable'));
+
+    $this->actingAs($user);
+
+    expect(fn () => Livewire::test(Profile::class)
+        ->set('photo', UploadedFile::fake()->image('new.png'))
+        ->call('updateProfileInformation'))
+        ->toThrow(RuntimeException::class);
+
+    Storage::disk('public')->assertExists($oldPath);
+    $this->assertDatabaseHas('users', ['id' => $user->id, 'profile_picture' => $oldPath]);
+});
+
+test('the previous profile picture is kept when the new file cannot be stored', function () {
+    $disk = Mockery::mock(Storage::fake('public'))->makePartial();
+    $oldPath = UploadedFile::fake()->image('old.png')->store('profile-pictures', 'public');
+    $disk->shouldReceive('put')->andReturn(false);
+    Storage::set('public', $disk);
+
+    $user = User::factory()->create();
+    $user->forceFill(['profile_picture' => $oldPath])->save();
+
+    $this->actingAs($user);
+
+    Livewire::test(Profile::class)
+        ->set('photo', UploadedFile::fake()->image('new.png'))
+        ->call('updateProfileInformation')
+        ->assertHasErrors('photo');
+
+    Storage::disk('public')->assertExists($oldPath);
+    expect($user->refresh()->profile_picture)->toBe($oldPath);
 });
 
 test('files that are not small images are rejected as a profile picture', function (UploadedFile $file) {
